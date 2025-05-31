@@ -18,6 +18,7 @@ pub fn main() !void {
         .callback = setDirectory,
     });
 
+    try cli_helper.parseStdIn(std.io.getStdIn());
     try cli_helper.parseInputArgs(std.process.args());
 }
 

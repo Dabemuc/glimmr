@@ -16,20 +16,24 @@ pub const CliHelper = struct {
 
     pub fn registerArg(self: *CliHelper, arg: Arg) void {
         self.registered_args.append(arg) catch {
-            std.debug.print("Failed to register argument. Did you call init?", .{});
+            std.debug.print("Failed to register argument {s}. Did you call init?", .{arg.long_name});
             std.process.exit(1);
         };
     }
 
     pub fn parseInputArgs(_: *CliHelper, input_args_iter: std.process.ArgIterator) !void {
-        const stdout = std.io.getStdOut().writer();
-
         var it = input_args_iter;
         while (true) {
             const arg = it.next();
             if (arg == null) break;
-            try stdout.print("{s}\n", .{arg.?});
+            std.debug.print("{s}\n", .{arg.?});
         }
+    }
+
+    pub fn parseStdIn(_: *CliHelper, stdIn: std.fs.File) !void {
+        var input: [5]u8 = undefined;
+        _ = try stdIn.reader().readUntilDelimiter(&input, '\n');
+        std.debug.print("The user entered: {s}\n", .{input});
     }
 };
 
