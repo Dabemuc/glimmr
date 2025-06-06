@@ -3,6 +3,7 @@ const core = @import("cli_core");
 const builtin = @import("builtin");
 
 var directory: std.fs.Dir = undefined;
+var input: []u8 = undefined;
 
 pub fn main() !void {
     if (builtin.mode == .Debug)
@@ -11,15 +12,19 @@ pub fn main() !void {
     const allocator = std.heap.page_allocator;
     var cli_helper = core.CliHelper.init(allocator);
 
-    cli_helper.registerArg(.{
+    cli_helper.registerOption(.{
         .long_name = "directory",
         .short_name = 'd',
         .description = "The directory to visualise. Defaults to current directory.",
         .callback = setDirectory,
     });
 
-    try cli_helper.parseStdIn(std.io.getStdIn());
-    try cli_helper.parseInputArgs(std.process.args());
+    const stdIn = cli_helper.readStdIn(std.io.getStdIn()) catch |err| {
+        std.debug.print("Failed to read stdIn\n{}", .{err});
+        std.process.exit(1);
+    };
+    input = stdIn;
+    try cli_helper.parseArgs(std.process.args());
 }
 
 fn setDirectory(dir: []const u8) void {
