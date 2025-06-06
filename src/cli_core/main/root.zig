@@ -19,26 +19,89 @@ pub const CliHelper = struct {
 
     pub fn registerOption(self: *CliHelper, arg: Option) void {
         self.registered_options.append(arg) catch {
-            std.debug.print("Failed to register option {s}. Did you call init?", .{arg.long_name});
+            std.debug.print("Failed to register option {s}. Did you call init?\n", .{arg.long_name});
             std.process.exit(1);
         };
     }
 
-    pub fn parseArgs(_: *CliHelper, input_args_iter: std.process.ArgIterator) !void {
+    pub fn parseArgs(self: *CliHelper, input_args_iter: std.process.ArgIterator) !?[]u8 {
         var it = input_args_iter;
+        // Skip first cause it is call of cli
+        _ = it.next();
+        var input: ?[]const u8 = null;
+        var option_expecting_parameter: ?Option = null;
         while (true) {
-            const arg = it.next();
-            if (arg == null) break;
-            std.debug.print("{s}\n", .{arg.?});
+            const arg_optional = it.next();
+            if (arg_optional == null) break;
+            const arg = arg_optional.?;
+            std.debug.print("Processing arg: {s}\n", .{arg});
+            // Process arg
+            if (arg[0] == '-') {
+                // option
+                std.debug.print("Option received.\n", .{});
+                const parsedOption = parseOption(self, arg[1..arg.len]);
+                std.debug.print("Recognized Option: {s}\n", .{parsedOption.long_name});
+                // check if option expects parameter
+                if (parsedOption.expects_parameter) {
+                    std.debug.print("Expecting parameter as next arg. Delaying calling callback until parameter received.\n", .{});
+                    if (option_expecting_parameter != null) {
+                        std.debug.print("Option is missing a parameter: {?s}(-{?c})\n", .{ option_expecting_parameter.?.long_name, option_expecting_parameter.?.short_name });
+                        std.process.exit(1);
+                    }
+                    option_expecting_parameter = parsedOption;
+                } else {
+                    std.debug.print("Option does not expect parameter. Calling callback.\n", .{});
+                    // TODO: actually call callback
+                    parsedOption.callback(null);
+                }
+            } else {
+                // non-option
+                std.debug.print("Input or Parameter received.\n", .{});
+                // Check if a parameter is expected
+                if (option_expecting_parameter != null) {
+                    std.debug.print("An option is waiting for a parameter. Calling callback with parameter.\n", .{});
+                    // TODO: call callback with parameter
+                    option_expecting_parameter.?.callback(arg);
+                    option_expecting_parameter = null;
+                } else if (input != null) {
+                    std.debug.print("Recognized as Input.\n", .{});
+                    input = arg;
+                } else {
+                    std.debug.print("Multiple inputs received as args. [{?s}, {s}]\n", .{ input, arg });
+                    std.process.exit(1);
+                }
+            }
         }
+        if (option_expecting_parameter != null) {
+            std.debug.print("Option is missing a parameter: {?s}(-{?c})\n", .{ option_expecting_parameter.?.long_name, option_expecting_parameter.?.short_name });
+            std.process.exit(1);
+        }
+        return null;
     }
 
-    pub fn readStdIn(_: *CliHelper, stdIn: std.fs.File) ![]u8 {
-        var buffer: [1024]u8 = undefined;
+    fn parseOption(self: *CliHelper, option_name_to_parse: []const u8) Option {
+        const index_of_option = for (self.registered_options.items, 0..) |raw_option, index| {
+            const option: Option = raw_option;
+            if (std.mem.eql(u8, option.long_name, option_name_to_parse)) break index;
+            if (option.short_name) |short_name| {
+                if (option_name_to_parse.len == 1 and option_name_to_parse[0] == short_name) break index;
+            }
+        } else null;
+
+        if (index_of_option == null) {
+            std.debug.print("Option does not exist: {s}\n", .{option_name_to_parse});
+            std.process.exit(1);
+        }
+
+        return self.registered_options.items[index_of_option.?];
+    }
+
+    pub fn readStdIn(_: *CliHelper, stdIn: std.fs.File, allocator: std.mem.Allocator) ![]u8 {
+        var buffer = try allocator.alloc(u8, 1024);
         const reader = stdIn.reader();
-        const readSize = try reader.readAll(&buffer);
-        std.debug.print("stdIn: {s}\n", .{buffer[0..readSize]});
-        std.debug.print("stdIn Size: {}\n", .{readSize});
+        const readSize = try reader.readAll(buffer);
+        std.debug.print("stdIn: {s}", .{buffer[0..readSize]});
+        // std.debug.print("stdIn Size: {}\n", .{readSize});
         return buffer[0..readSize];
     }
 
@@ -54,5 +117,6 @@ pub const Option = struct {
     long_name: []const u8,
     short_name: ?u8,
     description: []const u8,
-    callback: *const fn (arg_value: []const u8) void,
+    callback: *const fn (arg_value: ?[]const u8) void,
+    expects_parameter: bool,
 };
