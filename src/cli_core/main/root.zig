@@ -1,35 +1,41 @@
 const std = @import("std");
 
-const posix = std.posix; // Import the posix module
-const c = @import("std").c; // Import the C standard library definitions
+const posix = std.posix;
+const c = @import("std").c;
+
+const logging = @import("util").logging;
 
 /// A struct for generating a cli interface by registering options and commands.
 /// Enables parsing stdIn and process args to command, input and options.
 /// Provides further utility like automatic help page generation.
 pub const CliHelper = struct {
+    logger: logging.Logger,
+
     registered_options: std.ArrayList(Option),
     // registered_commands: std.ArrayList(Command),
-    debug_logs_enabled: bool = false,
 
     pub fn init(allocator: std.mem.Allocator) CliHelper {
         return CliHelper{
+            .logger = logging.Logger.init("cli_core"),
             .registered_options = std.ArrayList(Option).init(allocator),
         };
     }
 
     pub fn deinit(self: *CliHelper) void {
         self.registered_options.deinit();
+        self.logger.deinit();
     }
 
     pub fn enableDebugLogs(self: *CliHelper) void {
-        self.debug_logs_enabled = true;
+        self.logger.setLogLevel(logging.LOG_LEVEL.DEBUG);
     }
 
     pub fn registerOption(self: *CliHelper, arg: Option) void {
         self.registered_options.append(arg) catch {
-            std.debug.print("Failed to register option {s}. Did you call init?\n", .{arg.long_name});
+            self.logger.logError("Failed to register option {s}. Did you call init?\n", .{arg.long_name});
             std.process.exit(1);
         };
+        self.logger.logDebug("Successfully registered Option '{s}'", .{arg.long_name});
     }
 
     pub fn parseArgs(self: *CliHelper, input_args_iter: std.process.ArgIterator) !?[]const u8 {
@@ -42,44 +48,44 @@ pub const CliHelper = struct {
             const arg_optional = it.next();
             if (arg_optional == null) break;
             const arg = arg_optional.?;
-            std.debug.print("Processing arg: {s}\n", .{arg});
+            self.logger.logDebug("Processing arg: {s}\n", .{arg});
             // Process arg
             if (arg[0] == '-') {
                 // option
-                std.debug.print("Option received.\n", .{});
+                self.logger.logDebug("Option received.\n", .{});
                 const parsedOption = parseOption(self, arg[1..arg.len]);
-                std.debug.print("Recognized Option: {s}\n", .{parsedOption.long_name});
+                self.logger.logDebug("Recognized Option: '{s}'\n", .{parsedOption.long_name});
                 // check if option expects parameter
                 if (parsedOption.expects_parameter) {
-                    std.debug.print("Expecting parameter as next arg. Delaying calling callback until parameter received.\n", .{});
+                    self.logger.logDebug("Expecting parameter as next arg. Delaying calling callback until parameter received.\n", .{});
                     if (option_expecting_parameter != null) {
-                        std.debug.print("Option is missing a parameter: {?s}(-{?c})\n", .{ option_expecting_parameter.?.long_name, option_expecting_parameter.?.short_name });
+                        self.logger.logError("Option is missing a parameter: {?s}(-{?c})\n", .{ option_expecting_parameter.?.long_name, option_expecting_parameter.?.short_name });
                         std.process.exit(1);
                     }
                     option_expecting_parameter = parsedOption;
                 } else {
-                    std.debug.print("Option does not expect parameter. Calling callback.\n", .{});
+                    self.logger.logDebug("Option does not expect parameter. Calling callback.\n", .{});
                     parsedOption.callback(null);
                 }
             } else {
                 // non-option
-                std.debug.print("Input or Parameter received.\n", .{});
+                self.logger.logDebug("Input or Parameter received.\n", .{});
                 // Check if a parameter is expected
                 if (option_expecting_parameter != null) {
-                    std.debug.print("An option is waiting for a parameter. Calling callback with parameter.\n", .{});
+                    self.logger.logDebug("An option is waiting for a parameter. Calling callback with parameter.\n", .{});
                     option_expecting_parameter.?.callback(arg);
                     option_expecting_parameter = null;
                 } else if (input == null) {
-                    std.debug.print("Recognized as Input.\n", .{});
+                    self.logger.logDebug("Recognized as Input.\n", .{});
                     input = arg;
                 } else {
-                    std.debug.print("Multiple inputs received as args. [{?s}, {s}]\n", .{ input, arg });
+                    self.logger.logError("Multiple inputs received as args. [{?s}, {s}]\n", .{ input, arg });
                     std.process.exit(1);
                 }
             }
         }
         if (option_expecting_parameter != null) {
-            std.debug.print("Option is missing a parameter: {?s}(-{?c})\n", .{ option_expecting_parameter.?.long_name, option_expecting_parameter.?.short_name });
+            self.logger.logError("Option is missing a parameter: {?s}(-{?c})\n", .{ option_expecting_parameter.?.long_name, option_expecting_parameter.?.short_name });
             std.process.exit(1);
         }
         return input;
@@ -95,7 +101,7 @@ pub const CliHelper = struct {
         } else null;
 
         if (index_of_option == null) {
-            std.debug.print("Option does not exist: {s}\n", .{option_name_to_parse});
+            self.logger.logError("Option does not exist: {s}\n", .{option_name_to_parse});
             std.process.exit(1);
         }
 

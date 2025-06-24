@@ -6,12 +6,13 @@ var excludes_comma_separated_string: []const u8 = undefined;
 var input: ?[]const u8 = null;
 
 pub fn main() !void {
-    if (builtin.mode == .Debug)
-        std.debug.print("== Running Glimmr in debug mode! ==\n", .{});
-
     const allocator = std.heap.page_allocator;
     var cli_helper = core.CliHelper.init(allocator);
-    //cli_helper.enableDebugLogs();
+
+    if (builtin.mode == .Debug) {
+        std.debug.print("== Running Glimmr in debug mode! ==\n", .{});
+        cli_helper.enableDebugLogs();
+    }
 
     cli_helper.registerOption(.{
         .long_name = "exclude",
