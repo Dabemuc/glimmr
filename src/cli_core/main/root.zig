@@ -3,7 +3,9 @@ const std = @import("std");
 const posix = std.posix;
 const c = @import("std").c;
 
-const logging = @import("util").logging;
+const util = @import("util");
+const Cli = util.cli_util.Cli;
+const logging = util.logging;
 
 /// A struct for generating a cli interface by registering options and commands.
 /// Enables parsing stdIn and process args to command, input and options.
@@ -178,6 +180,6 @@ pub const Option = struct {
     long_name: []const u8,
     short_name: ?u8,
     description: []const u8,
-    callback: *const fn (arg_value: ?[]const u8) void,
+    callback: *const fn (self: *Cli, arg_value: ?[]const u8) void,
     expects_parameter: bool,
 };

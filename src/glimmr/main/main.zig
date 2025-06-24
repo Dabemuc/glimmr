@@ -1,7 +1,8 @@
 const std = @import("std");
 const core = @import("cli_core");
 const builtin = @import("builtin");
-const buildCli = @import("buildCli.zig").buildCli;
+const parseCli = @import("parseCli.zig").parseCli;
+const Cli = @import("util").cli_util.Cli;
 
 pub fn main() !void {
     const allocator = std.heap.page_allocator;
@@ -13,5 +14,6 @@ pub fn main() !void {
         cli_helper.enableDebugLogs();
     }
 
-    try buildCli(&cli_helper, allocator);
+    const parsedCli = Cli.init(allocator);
+    try parseCli(&cli_helper, parsedCli, allocator);
 }
