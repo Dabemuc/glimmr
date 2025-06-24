@@ -9,6 +9,7 @@ const c = @import("std").c; // Import the C standard library definitions
 pub const CliHelper = struct {
     registered_options: std.ArrayList(Option),
     // registered_commands: std.ArrayList(Command),
+    debug_logs_enabled: bool = false,
 
     pub fn init(allocator: std.mem.Allocator) CliHelper {
         return CliHelper{
@@ -18,6 +19,10 @@ pub const CliHelper = struct {
 
     pub fn deinit(self: *CliHelper) void {
         self.registered_options.deinit();
+    }
+
+    pub fn enableDebugLogs(self: *CliHelper) void {
+        self.debug_logs_enabled = true;
     }
 
     pub fn registerOption(self: *CliHelper, arg: Option) void {

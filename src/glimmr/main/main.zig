@@ -11,6 +11,7 @@ pub fn main() !void {
 
     const allocator = std.heap.page_allocator;
     var cli_helper = core.CliHelper.init(allocator);
+    //cli_helper.enableDebugLogs();
 
     cli_helper.registerOption(.{
         .long_name = "exclude",
