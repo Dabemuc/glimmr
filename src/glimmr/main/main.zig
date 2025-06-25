@@ -14,6 +14,8 @@ pub fn main() !void {
         cli_helper.enableDebugLogs();
     }
 
-    const parsedCli = Cli.init(allocator);
-    try parseCli(&cli_helper, parsedCli, allocator);
+    var parsedCli = Cli.init(allocator);
+    defer parsedCli.deinit();
+
+    try parseCli(&cli_helper, &parsedCli, allocator);
 }

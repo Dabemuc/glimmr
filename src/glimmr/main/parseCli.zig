@@ -3,12 +3,13 @@ const builtin = @import("builtin");
 const CliHelper = @import("cli_core").CliHelper;
 const Cli = @import("util").cli_util.Cli;
 
-pub fn parseCli(cli_helper: *CliHelper, parsedCli: Cli, allocator: std.mem.Allocator) !void {
+pub fn parseCli(cli_helper: *CliHelper, parsedCli: *Cli, allocator: std.mem.Allocator) !void {
     cli_helper.registerOption(.{
         .long_name = "exclude",
         .short_name = 'x',
         .description = "The files or directories to exclude as comma-separated string. (Example: '-x file1,folder1,./folder2/file2')",
         .callback = parsedCli.setExcludes,
+        .context = parsedCli,
         .expects_parameter = true,
     });
 
@@ -31,10 +32,15 @@ pub fn parseCli(cli_helper: *CliHelper, parsedCli: Cli, allocator: std.mem.Alloc
             parsedCli.input = inputAsArg;
         }
     }
-    if (parsedCli.input != null) {
-        std.debug.print("Value of input (size: {d}): {?s}\n", .{ parsedCli.input.?.len, parsedCli.input });
+    const inputOpt = parsedCli.input;
+    if (inputOpt) |input| {
+        std.debug.print("Value of input (size: {d}): {s}\n", .{ input.len, input });
     } else {
         std.debug.print("No input provided\n", .{});
     }
-    std.debug.print("Overview of set options: \n excludes: {s}\n", .{parsedCli.excludes});
+    // You are trying to print an ArrayList struct, you probably want to print its items
+    // std.debug.print("Overview of set options:\n", .{});
+    for (parsedCli.excludes.items) |item| {
+        std.debug.print("  exclude: {s}\n", .{item});
+    }
 }

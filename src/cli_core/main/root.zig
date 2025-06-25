@@ -67,7 +67,8 @@ pub const CliHelper = struct {
                     option_expecting_parameter = parsedOption;
                 } else {
                     self.logger.logDebug("Option does not expect parameter. Calling callback.\n", .{});
-                    parsedOption.callback(null);
+                    // Pass the context, and null for the parameter
+                    parsedOption.callback(parsedOption.context, null);
                 }
             } else {
                 // non-option
@@ -75,7 +76,9 @@ pub const CliHelper = struct {
                 // Check if a parameter is expected
                 if (option_expecting_parameter != null) {
                     self.logger.logDebug("An option is waiting for a parameter. Calling callback with parameter.\n", .{});
-                    option_expecting_parameter.?.callback(arg);
+                    // Pass the context and the argument value
+                    const opt = option_expecting_parameter.?;
+                    opt.callback(opt.context, arg);
                     option_expecting_parameter = null;
                 } else if (input == null) {
                     self.logger.logDebug("Recognized as Input.\n", .{});
@@ -180,6 +183,7 @@ pub const Option = struct {
     long_name: []const u8,
     short_name: ?u8,
     description: []const u8,
-    callback: *const fn (self: *Cli, arg_value: ?[]const u8) void,
+    callback: *const fn (context: ?*anyopaque, arg_value: ?[]const u8) void,
+    context: ?*anyopaque, // This field will store the pointer to our `Cli` instance
     expects_parameter: bool,
 };

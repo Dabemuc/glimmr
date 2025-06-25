@@ -1,7 +1,7 @@
 const std = @import("std");
-const logging = @import("util - cli_util").logging;
+const logging = @import("logging.zig");
 
-const logger = logging.Logger.init("util");
+var logger = logging.Logger.init("util - cli_util");
 
 pub const Cli = struct {
     // Data fields
@@ -9,11 +9,11 @@ pub const Cli = struct {
     input: ?[]const u8,
 
     // callback functions
-    setExcludes: fn (self: *Cli, parameter: ?[]const u8) void,
+    setExcludes: *const fn (context: ?*anyopaque, parameter: ?[]const u8) void,
 
     // init & deinit
     pub fn init(allocator: std.mem.Allocator) Cli {
-        logger.logDebug("Initializing Cli object.", .{});
+        // logger.logDebug("Initializing Cli object.", .{});
         return Cli{
             .excludes = std.ArrayList([]const u8).init(allocator),
             .input = null,
@@ -30,7 +30,13 @@ pub const Cli = struct {
     }
 };
 
-fn setExcludesImpl(self: *Cli, parameter: ?[]const u8) void {
+fn setExcludesImpl(context: ?*anyopaque, parameter: ?[]const u8) void {
+    // Cast the opaque context pointer back to our specific struct pointer.
+    const self: *Cli = @ptrCast(@alignCast(context orelse {
+        logger.logError("Error: callback context is null.", .{});
+        std.process.exit(1);
+    }));
+
     const param = parameter orelse {
         logger.logError("Error: --exclude option requires a parameter.\n", .{});
         std.process.exit(1);
