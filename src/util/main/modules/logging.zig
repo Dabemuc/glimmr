@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 
 const c = @cImport({
     @cInclude("time.h");
@@ -19,6 +20,7 @@ pub const Logger = struct {
 
     pub fn init(module_name: []const u8) Logger {
         return Logger{
+            .log_level = if (builtin.mode == .Debug) LOG_LEVEL.DEBUG else .log_level,
             .module_name = module_name,
         };
     }

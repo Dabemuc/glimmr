@@ -17,13 +17,16 @@ pub const CliHelper = struct {
     // registered_commands: std.ArrayList(Command),
 
     pub fn init(allocator: std.mem.Allocator) CliHelper {
+        var logger = logging.Logger.init("cli_core");
+        logger.logDebug("Initializing CliHelper object.", .{});
         return CliHelper{
-            .logger = logging.Logger.init("cli_core"),
+            .logger = logger,
             .registered_options = std.ArrayList(Option).init(allocator),
         };
     }
 
     pub fn deinit(self: *CliHelper) void {
+        self.logger.logDebug("Deinitializing CliHelper object.", .{});
         self.registered_options.deinit();
         self.logger.deinit();
     }
