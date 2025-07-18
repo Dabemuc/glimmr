@@ -1,4 +1,4 @@
-mod fs_structs;
+pub mod fs_structs;
 use fs_structs::{FsEntry, File, Folder};
 use std::path::PathBuf;
 use std::io;

@@ -1,6 +1,6 @@
-mod themes;
+pub mod themes;
 use themes::Theme;
-mod filetypes;
+pub mod filetypes;
 use filetypes::Filetype;
 use clap::Parser;
 use std::path::PathBuf;
