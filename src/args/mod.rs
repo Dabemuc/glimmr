@@ -1,9 +1,7 @@
 mod themes;
 use themes::Theme;
-
 mod filetypes;
 use filetypes::Filetype;
-
 use clap::Parser;
 
 /// # Glimmr
