@@ -7,6 +7,7 @@ use svg::node::element::{Text, Group};
 const LINE_HEIGHT: u32 = 20;
 const DEPTH_OFFSET: u32 = 20;
 const TOP_PADDING: u32 = 20;
+const CHAR_WIDTH_ESTIMATE: u32 = 8;
 
 /// Trait that allows adding SVG nodes to any container (Document or Group)
 pub trait AddableContainer {
@@ -28,21 +29,10 @@ impl AddableContainer for Group {
 }
 
 /// Compose the full SVG from the folder structure
-pub fn compose_svg_from_filestruct(filestructure: Folder, theme: Theme, include_root: bool) -> Document {
-    let mut leaf_count = 0;
-    let root_node = if include_root {
-        compose_folder_rec(filestructure, 0, 0, &mut leaf_count, &theme)
-            .set("transform", format!("translate({},{})", 0, TOP_PADDING))
-    } else {
-        let contents = filestructure.contents;
-        let group = Group::new();
-        compose_rec(group, contents, 0, &mut leaf_count, &theme)
-    };
-
-    debug!("Visualization has {} leafs", leaf_count);
-
+pub fn compose_svg_from_filestruct(filestructure: Folder, theme: Theme, include_root: bool, width: Option<u32>, heigth: Option<u32>) -> Document {
     let mut doc = Document::new();
 
+    // Generate Background
     if let Some(bg) = &theme.background_color {
         use svg::node::element::Rectangle;
 
@@ -54,19 +44,52 @@ pub fn compose_svg_from_filestruct(filestructure: Folder, theme: Theme, include_
         doc = doc.add(background);
     }
 
-    doc = doc
-        .set("viewBox", (0, 0, 200, leaf_count * LINE_HEIGHT + TOP_PADDING))
-        .add_node(root_node);
+    // Build filestructure visualization
+    let mut leaf_count = 0;
+    let mut max_depth = 0;
+    let mut max_label_len_at_max_depth: usize = 0;
 
+    let root_node = if include_root {
+        compose_folder_rec(filestructure, 0, 0, &mut leaf_count, &mut max_depth, &mut max_label_len_at_max_depth, &theme)
+            .set("transform", format!("translate({},{})", 0, TOP_PADDING))
+    } else {
+        let contents = filestructure.contents;
+        let group = Group::new();
+        compose_rec(group, contents, 0, &mut leaf_count, &mut max_depth, &mut max_label_len_at_max_depth, &theme)
+    };
+
+    debug!("Visualization has {} leafs and max depth {}", leaf_count, max_depth);
+    doc = doc.add_node(root_node);
+
+    // Define SVG size
+    let computed_width = width.unwrap_or(
+        (max_depth + 1) * DEPTH_OFFSET
+        + (max_label_len_at_max_depth as u32 * CHAR_WIDTH_ESTIMATE)
+    );
+    let computed_height = heigth.unwrap_or(
+        leaf_count * LINE_HEIGHT + TOP_PADDING
+    );
+
+    doc = doc.set("viewBox", (0, 0, computed_width, computed_height));
 
     doc
 }
 
 /// Recursively add folder contents into any AddableContainer
-fn compose_rec<T>(mut container: T, contents: Vec<FsEntry>, depth: u32, leaf_count: &mut u32, theme: &Theme) -> T
+fn compose_rec<T>(
+    mut container: T,
+    contents: Vec<FsEntry>,
+    depth: u32,
+    leaf_count: &mut u32,
+    max_depth: &mut u32,
+    max_label_len_at_max_depth: &mut usize,
+    theme: &Theme
+) -> T
 where
     T: AddableContainer,
 {
+    *max_depth = (*max_depth).max(depth);
+
     let mut curr_relative_y = 1;
 
     for child in contents {
@@ -74,10 +97,16 @@ where
 
         match child {
             FsEntry::Folder(sub_folder) => {
-                let group = compose_folder_rec(sub_folder, depth + 1, curr_relative_y, leaf_count, theme);
+                if depth >= *max_depth {
+                    *max_label_len_at_max_depth = (*max_label_len_at_max_depth).max(sub_folder.name.len());
+                }
+                let group = compose_folder_rec(sub_folder, depth + 1, curr_relative_y, leaf_count, max_depth, max_label_len_at_max_depth, theme);
                 container = container.add_node(group);
             }
             FsEntry::File(file) => {
+                if depth >= *max_depth {
+                    *max_label_len_at_max_depth = (*max_label_len_at_max_depth).max(file.name.len());
+                }
                 let text = compose_file(file, depth + 1, curr_relative_y, theme);
                 container = container.add_node(text);
                 *leaf_count += 1;
@@ -91,8 +120,18 @@ where
 }
 
 /// Compose a folder and all its children into an SVG group
-fn compose_folder_rec(folder: Folder, depth: u32, y_pos: u32, leaf_count: &mut u32, theme: &Theme) -> Group {
+fn compose_folder_rec(
+    folder: Folder,
+    depth: u32,
+    y_pos: u32,
+    leaf_count: &mut u32,
+    max_depth: &mut u32,
+    max_label_len_at_max_depth: &mut usize,
+    theme: &Theme
+) -> Group {
     let Folder { name, contents } = folder;
+
+    *max_depth = (*max_depth).max(depth);
 
     let group = Group::new()
         .set("transform", format!("translate({},{})", depth * DEPTH_OFFSET, y_pos * LINE_HEIGHT))
@@ -104,7 +143,7 @@ fn compose_folder_rec(folder: Folder, depth: u32, y_pos: u32, leaf_count: &mut u
 
     *leaf_count += 1;
 
-    compose_rec(group, contents, depth, leaf_count, theme)
+    compose_rec(group, contents, depth, leaf_count, max_depth, max_label_len_at_max_depth, theme)
 }
 
 /// Compose a single file into an SVG text element

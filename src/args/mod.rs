@@ -35,6 +35,14 @@ pub struct Args {
     pub include_root: bool,
 
     /// Dont render background color
-    #[arg(long)]
+    #[arg(short, long)]
     pub bg_transparent: bool,
+
+    /// Absolute width of output
+    #[arg(short = 'W', long)]
+    pub width: Option<u32>,
+
+    /// Absolute height of output
+    #[arg(short = 'H', long)]
+    pub height: Option<u32>,
 }

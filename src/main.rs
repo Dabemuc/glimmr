@@ -17,5 +17,13 @@ fn main() {
     let filestructure = parse_fs(PathBuf::from(args.input_path), args.depth);
     debug!("Parsed filestructure: {:#?}", filestructure);
 
-    visualize(filestructure, args.theme.get_theme(), args.filetype, PathBuf::from(args.output_filepath), args.include_root);
+    visualize(
+        filestructure,
+        args.theme.get_theme(),
+        args.filetype,
+        PathBuf::from(args.output_filepath),
+        args.include_root,
+        args.width,
+        args.height,
+    );
 }
