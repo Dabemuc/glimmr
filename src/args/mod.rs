@@ -27,6 +27,10 @@ pub struct Args {
     pub output_filepath: String,
 
     /// Max recursive depth
-    #[arg(short, long, default_value_t = 3)] 
+    #[arg(short, long, default_value_t = 3)]
     pub depth: u32,
+
+    /// Include root folder
+    #[arg(short = 'r', long, default_value_t = true)]
+    pub include_root: bool,
 }

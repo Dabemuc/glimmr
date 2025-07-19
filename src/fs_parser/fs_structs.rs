@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 #[derive(Debug)]
 pub struct File {
-    name: String,
+    pub name: String,
 }
 impl File {
     pub fn new(name: String) -> Self {
@@ -12,8 +12,8 @@ impl File {
 
 #[derive(Debug)]
 pub struct Folder {
-    name: String,
-    contents: Vec<FsEntry>,
+    pub name: String,
+    pub contents: Vec<FsEntry>,
 }
 impl Folder {
     pub fn new(name: String, contents: Vec<FsEntry>) -> Self {
