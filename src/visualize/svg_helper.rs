@@ -1,63 +1,96 @@
 use crate::fs_parser::fs_structs::{File, Folder, FsEntry};
 use crate::args::themes::Theme;
 use log::debug;
-use svg::{Document, Node};
+use svg::{Document, node::Node};
 use svg::node::element::{Text, Group};
 
 const LINE_HEIGHT: u32 = 20;
 const DEPTH_OFFSET: u32 = 20;
-const PADDING: u32 = 20;
+const TOP_PADDING: u32 = 20;
 
-pub fn compose_svg_from_filestruct(filestructure: Folder, _theme: Theme, include_root: bool) -> Document {
-    let mut leaf_count = 0;
-    let root_folder = compose_folder_rec(filestructure, 0, 2, &mut leaf_count);
-
-    debug!("Visualization has {} leafs", leaf_count);
-    let mut document = Document::new()
-        .set("viewBox", (20, 20, 70, leaf_count * LINE_HEIGHT + PADDING));
-
-    if include_root {
-        document = document.add(root_folder);
-    } else {
-        // for child in root_folder.get_children() {
-        //     document = document.add(child.cloned());
-        // }
-    }
-
-    return document
+/// Trait that allows adding SVG nodes to any container (Document or Group)
+pub trait AddableContainer {
+    fn add_node(self, node: impl Node) -> Self;
 }
 
+impl AddableContainer for Document {
+    fn add_node(mut self, node: impl Node) -> Self {
+        self.append(node);
+        self
+    }
+}
 
-fn compose_folder_rec(folder: Folder, depth: u32, y_pos: u32, leaf_count: &mut u32) -> Group{
-    let mut group = Group::new()
+impl AddableContainer for Group {
+    fn add_node(mut self, node: impl Node) -> Self {
+        self.append(node);
+        self
+    }
+}
+
+/// Compose the full SVG from the folder structure
+pub fn compose_svg_from_filestruct(filestructure: Folder, _theme: Theme, include_root: bool) -> Document {
+    let mut leaf_count = 0;
+    let root_node = if include_root {
+        compose_folder_rec(filestructure, 0, 0, &mut leaf_count)
+            .set("transform", format!("translate({},{})", 0, TOP_PADDING))
+    } else {
+        let contents = filestructure.contents;
+        let group = Group::new();
+        compose_rec(group, contents, 0, &mut leaf_count)
+    };
+
+    debug!("Visualization has {} leafs", leaf_count);
+
+    Document::new()
+        .set("viewBox", (0, 0, 100, leaf_count * LINE_HEIGHT + TOP_PADDING))
+        .add_node(root_node)
+}
+
+/// Recursively add folder contents into any AddableContainer
+fn compose_rec<T>(mut container: T, contents: Vec<FsEntry>, depth: u32, leaf_count: &mut u32) -> T
+where
+    T: AddableContainer,
+{
+    let mut curr_relative_y = 1;
+
+    for child in contents {
+        let before = *leaf_count;
+
+        match child {
+            FsEntry::Folder(sub_folder) => {
+                let group = compose_folder_rec(sub_folder, depth + 1, curr_relative_y, leaf_count);
+                container = container.add_node(group);
+            }
+            FsEntry::File(file) => {
+                let text = compose_file(file, depth + 1, curr_relative_y);
+                container = container.add_node(text);
+                *leaf_count += 1;
+            }
+        }
+
+        curr_relative_y += *leaf_count - before;
+    }
+
+    container
+}
+
+/// Compose a folder and all its children into an SVG group
+fn compose_folder_rec(folder: Folder, depth: u32, y_pos: u32, leaf_count: &mut u32) -> Group {
+    let Folder { name, contents } = folder;
+
+    let group = Group::new()
         .set("transform", format!("translate({},{})", depth * DEPTH_OFFSET, y_pos * LINE_HEIGHT))
-        .add(Text::new(folder.name)
+        .add(Text::new(name)
             .set("font-family", "Arial")
             .set("font-size", 16)
             .set("fill", "blue"));
 
     *leaf_count += 1;
 
-    let mut curr_relative_y = 1;
-
-    for child in folder.contents {
-        let relative_leaf_count_before_next_child = *leaf_count;
-        match child {
-            FsEntry::Folder(sub_folder) => {
-                group = group.add(compose_folder_rec(sub_folder, depth+1, curr_relative_y, leaf_count));
-            },
-            FsEntry::File(sub_file) => {
-                group = group.add(compose_file(sub_file, depth+1, curr_relative_y));
-                *leaf_count += 1;
-            },
-        };
-        curr_relative_y += *leaf_count - relative_leaf_count_before_next_child;
-    };
-
-    return group;
+    compose_rec(group, contents, depth, leaf_count)
 }
 
-
+/// Compose a single file into an SVG text element
 fn compose_file(file: File, depth: u32, y_pos: u32) -> Text {
     Text::new(file.name)
         .set("x", depth * DEPTH_OFFSET)

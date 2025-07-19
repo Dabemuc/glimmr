@@ -1,3 +1,7 @@
+
+*.svg
+
+
 # Added by cargo
 
 /target

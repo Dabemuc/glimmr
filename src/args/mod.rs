@@ -31,6 +31,6 @@ pub struct Args {
     pub depth: u32,
 
     /// Include root folder
-    #[arg(short = 'r', long, default_value_t = true)]
+    #[arg(short = 'r', long)]
     pub include_root: bool,
 }
