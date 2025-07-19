@@ -110,7 +110,7 @@ where
                 if depth >= *max_depth {
                     *max_label_len_at_max_depth = (*max_label_len_at_max_depth).max(file.name.len());
                 }
-                let text = compose_file(file, depth, curr_relative_y, theme);
+                let text = compose_file(file, curr_relative_y, theme);
                 container = container.add_node(text);
                 *leaf_count += 1;
             }
@@ -137,7 +137,7 @@ fn compose_folder_rec(
     *max_depth = (*max_depth).max(depth);
 
     let group = Group::new()
-        .set("transform", format!("translate({},{})", depth * DEPTH_OFFSET, y_pos * LINE_HEIGHT))
+        .set("transform", format!("translate({},{})", DEPTH_OFFSET, y_pos * LINE_HEIGHT))
         // .add(Text::new(format!("{} ({})", name, depth))
         .add(Text::new(name)
             .set("font-family", theme.font_family.clone())
@@ -151,9 +151,9 @@ fn compose_folder_rec(
 }
 
 /// Compose a single file into an SVG text element
-fn compose_file(file: File, depth: u32, y_pos: u32, theme: &Theme) -> Text {
+fn compose_file(file: File, y_pos: u32, theme: &Theme) -> Text {
     Text::new(file.name)
-        .set("x", depth * DEPTH_OFFSET)
+        .set("x", DEPTH_OFFSET)
         .set("y", y_pos * LINE_HEIGHT)
         .set("font-family", theme.font_family.clone())
         .set("font-size", theme.file_font_size)
