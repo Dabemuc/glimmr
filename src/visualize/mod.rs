@@ -26,6 +26,6 @@ fn build_svg(filestructure: Folder, theme: Theme, mut output_filepath: PathBuf, 
     svg::save(output_filepath, &document).unwrap();
 }
 
-fn build_png(_filestructure: Folder, _theme: Theme, _output_filepath: PathBuf, _include_root: bool, _extension: &'static str, width: Option<u32>, heigth: Option<u32>) {
+fn build_png(_filestructure: Folder, _theme: Theme, _output_filepath: PathBuf, _include_root: bool, _extension: &'static str, _width: Option<u32>, _heigth: Option<u32>) {
     panic!("PNG not yet implemented!");
 }
