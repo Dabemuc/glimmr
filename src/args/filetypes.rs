@@ -1,12 +1,22 @@
 use std::str::FromStr;
 
 #[derive(Debug, Clone)]
-pub enum Filetype{
+pub enum Filetype {
     SVG,
     PNG,
 }
 
-impl FromStr for Filetype{
+impl Filetype {
+    /// Returns the file extension for the given Filetype.
+    pub fn extension(&self) -> &'static str {
+        match self {
+            Filetype::SVG => "svg",
+            Filetype::PNG => "png",
+        }
+    }
+}
+
+impl FromStr for Filetype {
     type Err = &'static str;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -18,7 +28,7 @@ impl FromStr for Filetype{
     }
 }
 
-impl std::fmt::Display for Filetype{
+impl std::fmt::Display for Filetype {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", match self {
             Filetype::SVG=> "svg",

@@ -23,7 +23,7 @@ pub struct Args {
     pub filetype: Filetype,
 
     /// Output filename or filepath
-    #[arg(short, long, default_value = ".")]
+    #[arg(short, long, default_value = "glimmr_out")]
     pub output_filepath: String,
 
     /// Max recursive depth
