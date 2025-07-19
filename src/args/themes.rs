@@ -10,20 +10,24 @@ impl Themes {
     pub fn get_theme(&self) -> Theme {
         match self {
             Themes::Default =>  Theme {
-                font_family: "Arial".into(),
+                font: "Arial".into(),
                 folder_font_size: 16,
                 file_font_size: 14,
-                folder_color: "blue".into(),
-                file_color: "green".into(),
-                background_color: None,
+                folder_text_color: "hsl(0,0%,10%)".into(),
+                file_text_color: "hsl(0,0%,15%)".into(),
+                folder_bg_color: "hsl(0,0%,90%)".into(),
+                file_bg_color: "hsl(0,0%,95%)".into(),
+                bg_color: Some("hsl(0,0%,100%)".into()),
             },
             Themes::DefaultDark => Theme {
-                font_family: "Fira Code".into(),
-                folder_font_size: 16,
+                font: "Times New Roman".into(),
+                folder_font_size: 14,
                 file_font_size: 14,
-                folder_color: "lightblue".into(),
-                file_color: "lightgreen".into(),
-                background_color: Some("black".into()),
+                folder_text_color: "hsl(0,0%,70%)".into(),
+                file_text_color: "hsl(0,0%,95%)".into(),
+                folder_bg_color: "hsl(0,0%,10%)".into(),
+                file_bg_color: "hsl(0,0%,15%)".into(),
+                bg_color: Some("hsl(0,0%,5%)".into()),
             },
         }
     }
@@ -51,10 +55,12 @@ impl std::fmt::Display for Themes {
 }
 
 pub struct Theme {
-    pub font_family: String,
+    pub font: String,
     pub folder_font_size: u32,
     pub file_font_size: u32,
-    pub folder_color: String,
-    pub file_color: String,
-    pub background_color: Option<String>,
+    pub folder_text_color: String,
+    pub file_text_color: String,
+    pub folder_bg_color: String,
+    pub file_bg_color: String,
+    pub bg_color: Option<String>,
 }
