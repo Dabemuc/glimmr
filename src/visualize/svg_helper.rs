@@ -1,5 +1,5 @@
 use crate::fs_parser::fs_structs::{File, Folder, FsEntry};
-use crate::args::themes::Theme;
+use crate::args::themes::{Theme};
 use log::debug;
 use svg::{Document, node::Node};
 use svg::node::element::{Text, Group};
@@ -28,26 +28,42 @@ impl AddableContainer for Group {
 }
 
 /// Compose the full SVG from the folder structure
-pub fn compose_svg_from_filestruct(filestructure: Folder, _theme: Theme, include_root: bool) -> Document {
+pub fn compose_svg_from_filestruct(filestructure: Folder, theme: Theme, include_root: bool) -> Document {
     let mut leaf_count = 0;
     let root_node = if include_root {
-        compose_folder_rec(filestructure, 0, 0, &mut leaf_count)
+        compose_folder_rec(filestructure, 0, 0, &mut leaf_count, &theme)
             .set("transform", format!("translate({},{})", 0, TOP_PADDING))
     } else {
         let contents = filestructure.contents;
         let group = Group::new();
-        compose_rec(group, contents, 0, &mut leaf_count)
+        compose_rec(group, contents, 0, &mut leaf_count, &theme)
     };
 
     debug!("Visualization has {} leafs", leaf_count);
 
-    Document::new()
-        .set("viewBox", (0, 0, 100, leaf_count * LINE_HEIGHT + TOP_PADDING))
-        .add_node(root_node)
+    let mut doc = Document::new();
+
+    if let Some(bg) = &theme.background_color {
+        use svg::node::element::Rectangle;
+
+        let background = Rectangle::new()
+            .set("width", "100%")
+            .set("height", "100%")
+            .set("fill", bg.clone());
+
+        doc = doc.add(background);
+    }
+
+    doc = doc
+        .set("viewBox", (0, 0, 200, leaf_count * LINE_HEIGHT + TOP_PADDING))
+        .add_node(root_node);
+
+
+    doc
 }
 
 /// Recursively add folder contents into any AddableContainer
-fn compose_rec<T>(mut container: T, contents: Vec<FsEntry>, depth: u32, leaf_count: &mut u32) -> T
+fn compose_rec<T>(mut container: T, contents: Vec<FsEntry>, depth: u32, leaf_count: &mut u32, theme: &Theme) -> T
 where
     T: AddableContainer,
 {
@@ -58,11 +74,11 @@ where
 
         match child {
             FsEntry::Folder(sub_folder) => {
-                let group = compose_folder_rec(sub_folder, depth + 1, curr_relative_y, leaf_count);
+                let group = compose_folder_rec(sub_folder, depth + 1, curr_relative_y, leaf_count, theme);
                 container = container.add_node(group);
             }
             FsEntry::File(file) => {
-                let text = compose_file(file, depth + 1, curr_relative_y);
+                let text = compose_file(file, depth + 1, curr_relative_y, theme);
                 container = container.add_node(text);
                 *leaf_count += 1;
             }
@@ -75,27 +91,28 @@ where
 }
 
 /// Compose a folder and all its children into an SVG group
-fn compose_folder_rec(folder: Folder, depth: u32, y_pos: u32, leaf_count: &mut u32) -> Group {
+fn compose_folder_rec(folder: Folder, depth: u32, y_pos: u32, leaf_count: &mut u32, theme: &Theme) -> Group {
     let Folder { name, contents } = folder;
 
     let group = Group::new()
         .set("transform", format!("translate({},{})", depth * DEPTH_OFFSET, y_pos * LINE_HEIGHT))
         .add(Text::new(name)
-            .set("font-family", "Arial")
-            .set("font-size", 16)
-            .set("fill", "blue"));
+            .set("font-family", theme.font_family.clone())
+            .set("font-size", theme.folder_font_size)
+            .set("fill", theme.folder_color.clone())
+        );
 
     *leaf_count += 1;
 
-    compose_rec(group, contents, depth, leaf_count)
+    compose_rec(group, contents, depth, leaf_count, theme)
 }
 
 /// Compose a single file into an SVG text element
-fn compose_file(file: File, depth: u32, y_pos: u32) -> Text {
+fn compose_file(file: File, depth: u32, y_pos: u32, theme: &Theme) -> Text {
     Text::new(file.name)
         .set("x", depth * DEPTH_OFFSET)
         .set("y", y_pos * LINE_HEIGHT)
-        .set("font-family", "Arial")
-        .set("font-size", 14)
-        .set("fill", "green")
+        .set("font-family", theme.font_family.clone())
+        .set("font-size", theme.file_font_size)
+        .set("fill", theme.file_color.clone())
 }

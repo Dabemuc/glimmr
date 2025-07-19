@@ -1,5 +1,5 @@
 pub mod themes;
-use themes::Theme;
+use themes::Themes;
 pub mod filetypes;
 use filetypes::Filetype;
 use clap::Parser;
@@ -15,8 +15,8 @@ pub struct Args {
     pub input_path: PathBuf,
 
     /// Theme to use
-    #[arg(short, long, default_value_t = Theme::Default)]
-    pub theme: Theme,
+    #[arg(short, long, default_value_t = Themes::Default)]
+    pub theme: Themes,
 
     /// Output filetype
     #[arg(short, long, default_value_t = Filetype::SVG)]
@@ -33,4 +33,8 @@ pub struct Args {
     /// Include root folder
     #[arg(short = 'r', long)]
     pub include_root: bool,
+
+    /// Dont render background color
+    #[arg(long)]
+    pub bg_transparent: bool,
 }
