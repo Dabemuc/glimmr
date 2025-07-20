@@ -59,7 +59,9 @@ pub fn compose_svg_from_filestruct(
         let background = Rectangle::new()
             .set("width", "100%")
             .set("height", "100%")
-            .set("fill", bg.clone());
+            .set("fill", bg.clone())
+            .set("rx", theme.bg_corner_rad)
+            .set("ry", theme.bg_corner_rad);
 
         doc = doc.add(background);
     }
@@ -198,7 +200,9 @@ fn compose_folder_rec(
             measure_text_width(&name, font, theme.file_font_size as f32) * 1.1
                 + ITEM_BG_PADDING as f32 * 2.0,
         )
-        .set("height", LINE_HEIGHT - LINE_PADDING + ITEM_BG_PADDING);
+        .set("height", LINE_HEIGHT - LINE_PADDING + ITEM_BG_PADDING)
+        .set("rx", theme.folder_bg_corner_rad)
+        .set("ry", theme.folder_bg_corner_rad);
 
     let text = Text::new(name)
         .set("x", ITEM_BG_PADDING)
@@ -239,7 +243,9 @@ fn compose_file(file: File, y_pos: u32, theme: &Theme, font: &Font) -> Group {
             measure_text_width(&file.name, font, theme.file_font_size as f32) * 1.1
                 + ITEM_BG_PADDING as f32 * 2.0,
         )
-        .set("height", LINE_HEIGHT - LINE_PADDING + ITEM_BG_PADDING);
+        .set("height", LINE_HEIGHT - LINE_PADDING + ITEM_BG_PADDING)
+        .set("rx", theme.file_bg_corner_rad)
+        .set("ry", theme.file_bg_corner_rad);
 
     let text = Text::new(file.name)
         .set("x", ITEM_BG_PADDING)

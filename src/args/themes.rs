@@ -18,16 +18,22 @@ impl Themes {
                 folder_bg_color: "hsl(0,0%,90%)".into(),
                 file_bg_color: "hsl(0,0%,95%)".into(),
                 bg_color: Some("hsl(0,0%,100%)".into()),
+                bg_corner_rad: 0,
+                folder_bg_corner_rad: 2,
+                file_bg_corner_rad: 2,
             },
             Themes::DefaultDark => Theme {
                 font: "Times New Roman".into(),
                 folder_font_size: 14,
                 file_font_size: 14,
-                folder_text_color: "hsl(0,0%,70%)".into(),
-                file_text_color: "hsl(0,0%,95%)".into(),
+                folder_text_color: "hsl(0,0%,90%)".into(),
+                file_text_color: "hsl(0,0%,75%)".into(),
                 folder_bg_color: "hsl(0,0%,10%)".into(),
                 file_bg_color: "hsl(0,0%,15%)".into(),
                 bg_color: Some("hsl(0,0%,5%)".into()),
+                bg_corner_rad: 0,
+                folder_bg_corner_rad: 2,
+                file_bg_corner_rad: 2,
             },
         }
     }
@@ -67,4 +73,7 @@ pub struct Theme {
     pub folder_bg_color: String,
     pub file_bg_color: String,
     pub bg_color: Option<String>,
+    pub bg_corner_rad: u32,
+    pub folder_bg_corner_rad: u32,
+    pub file_bg_corner_rad: u32,
 }
