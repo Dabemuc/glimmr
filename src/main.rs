@@ -1,9 +1,9 @@
 mod args;
 use args::Args;
 use clap::Parser;
-use log::{debug};
+use log::debug;
 mod fs_parser;
-use fs_parser::{parse_fs};
+use fs_parser::parse_fs;
 use std::path::PathBuf;
 mod visualize;
 use visualize::visualize;

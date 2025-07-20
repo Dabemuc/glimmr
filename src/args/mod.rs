@@ -1,8 +1,8 @@
 pub mod themes;
 use themes::Themes;
 pub mod filetypes;
-use filetypes::Filetype;
 use clap::Parser;
+use filetypes::Filetype;
 use std::path::PathBuf;
 
 /// # Glimmr

@@ -3,13 +3,13 @@ use std::str::FromStr;
 #[derive(Debug, Clone)]
 pub enum Themes {
     Default,
-    DefaultDark
+    DefaultDark,
 }
 
 impl Themes {
     pub fn get_theme(&self) -> Theme {
         match self {
-            Themes::Default =>  Theme {
+            Themes::Default => Theme {
                 font: "Arial".into(),
                 folder_font_size: 16,
                 file_font_size: 14,
@@ -47,10 +47,14 @@ impl FromStr for Themes {
 
 impl std::fmt::Display for Themes {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", match self {
-            Themes::Default => "default",
-            Themes::DefaultDark=> "default_dark",
-        })
+        write!(
+            f,
+            "{}",
+            match self {
+                Themes::Default => "default",
+                Themes::DefaultDark => "default_dark",
+            }
+        )
     }
 }
 

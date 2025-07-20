@@ -30,9 +30,13 @@ impl FromStr for Filetype {
 
 impl std::fmt::Display for Filetype {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", match self {
-            Filetype::SVG=> "svg",
-            Filetype::PNG=> "png",
-        })
+        write!(
+            f,
+            "{}",
+            match self {
+                Filetype::SVG => "svg",
+                Filetype::PNG => "png",
+            }
+        )
     }
 }

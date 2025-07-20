@@ -1,8 +1,8 @@
-use font_kit::source::SystemSource;
+use base64::{Engine, engine::general_purpose};
 use font_kit::handle::Handle;
+use font_kit::source::SystemSource;
 use rusttype::{Font, Scale};
 use std::fs;
-use base64::{engine::general_purpose, Engine};
 
 pub fn load_font_bytes(font_name: &str) -> Option<Vec<u8>> {
     let source = SystemSource::new();
