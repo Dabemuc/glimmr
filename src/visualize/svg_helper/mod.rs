@@ -2,10 +2,14 @@ use crate::args::themes::Theme;
 use crate::fs_parser::fs_structs::{File, Folder, FsEntry};
 use log::debug;
 use rusttype::Font;
+use svg::Document;
 use svg::node::element::{Group, Rectangle, Text};
-use svg::{Document, node::Node};
 mod fonts;
 use fonts::{build_b64_font_embed, load_font_bytes, measure_text_width};
+use svg::node::element::Path;
+use svg::node::element::path::Data;
+mod addable_container;
+use addable_container::AddableContainer;
 
 const LINE_HEIGHT: u32 = 20;
 const LINE_PADDING: u32 = 5;
@@ -13,25 +17,6 @@ const DEPTH_OFFSET: u32 = 20;
 const TOP_PADDING: u32 = 20;
 const BG_X_PADDING: u32 = 20;
 const ITEM_BG_PADDING: u32 = 3;
-
-/// Trait that allows adding SVG nodes to any container (Document or Group)
-pub trait AddableContainer {
-    fn add_node(self, node: impl Node) -> Self;
-}
-
-impl AddableContainer for Document {
-    fn add_node(mut self, node: impl Node) -> Self {
-        self.append(node);
-        self
-    }
-}
-
-impl AddableContainer for Group {
-    fn add_node(mut self, node: impl Node) -> Self {
-        self.append(node);
-        self
-    }
-}
 
 /// Compose the full SVG from the folder structure
 pub fn compose_svg_from_filestruct(
@@ -136,9 +121,20 @@ where
     *max_depth = (*max_depth).max(depth);
 
     let mut curr_relative_y = 1;
+    let mut curr_child_index = 0;
+    let contents_len = contents.len();
 
     for child in contents {
         let before = *leaf_count;
+
+        for i in 0..depth as i32 {
+            container = container.add_node(compose_hierarchy_line(
+                (i - depth as i32 + 1) * (DEPTH_OFFSET as i32) + (DEPTH_OFFSET / 2) as i32,
+                (curr_relative_y - 1) * LINE_HEIGHT + LINE_HEIGHT / 2,
+                curr_child_index == contents_len - 1,
+                theme,
+            ));
+        }
 
         match child {
             FsEntry::Folder(sub_folder) => {
@@ -172,6 +168,7 @@ where
         }
 
         curr_relative_y += *leaf_count - before;
+        curr_child_index += 1;
     }
 
     container
@@ -261,3 +258,93 @@ fn compose_file(file: File, y_pos: u32, theme: &Theme, font: &Font) -> Group {
         .add(bg)
         .add(text)
 }
+
+fn compose_hierarchy_line(x_pos: i32, y_pos: u32, is_last: bool, theme: &Theme) -> Path {
+    let mut data = Data::new().move_to((x_pos, y_pos));
+
+    // Display horizontal line when is last
+    if is_last {
+        data = data
+            .vertical_line_by(LINE_HEIGHT / 2)
+            .horizontal_line_by(DEPTH_OFFSET);
+    } else {
+        data = data.vertical_line_by(LINE_HEIGHT);
+    }
+
+    let path = Path::new()
+        .set("fill", "none")
+        .set("stroke", theme.hierarchy_line_color.clone())
+        .set("stroke-width", 1)
+        .set("d", data);
+
+    return path;
+}
+
+///// Recursively build connector path lines between parent and children
+//fn build_hierarchy_paths(
+//    contents: &Vec<FsEntry>,
+//    depth: u32,
+//    y_offset: u32,
+//    theme: &Theme,
+//    paths: &mut Vec<Path>,
+//    leaf_counter: &mut u32,
+//) {
+//    let mut curr_relative_y = 1;
+//
+//    for entry in contents {
+//        let before = *leaf_counter;
+//
+//        match entry {
+//            FsEntry::Folder(folder) => {
+//                let child_y = y_offset + curr_relative_y * LINE_HEIGHT;
+//                let parent_x = depth * DEPTH_OFFSET;
+//                let child_x = (depth + 1) * DEPTH_OFFSET;
+//
+//                // Vertical + horizontal connector
+//                let data = Data::new()
+//                    .move_to((parent_x + BG_X_PADDING, child_y - LINE_HEIGHT / 2))
+//                    .vertical_line_by(LINE_HEIGHT / 2)
+//                    .horizontal_line_by(DEPTH_OFFSET);
+//
+//                let path = Path::new()
+//                    .set("fill", "none")
+//                    .set("stroke", theme.hierarchy_line_color.clone())
+//                    .set("stroke-width", 1)
+//                    .set("d", data);
+//                paths.push(path);
+//
+//                *leaf_counter += 1;
+//
+//                build_hierarchy_paths(
+//                    &folder.contents,
+//                    depth + 1,
+//                    y_offset + curr_relative_y * LINE_HEIGHT,
+//                    theme,
+//                    paths,
+//                    leaf_counter,
+//                );
+//            }
+//            FsEntry::File(_) => {
+//                let child_y = y_offset + curr_relative_y * LINE_HEIGHT;
+//                let parent_x = depth * DEPTH_OFFSET;
+//                let child_x = (depth + 1) * DEPTH_OFFSET;
+//
+//                let data = Data::new()
+//                    .move_to((parent_x + DEPTH_OFFSET / 2, child_y - LINE_HEIGHT / 2))
+//                    .vertical_line_by(LINE_HEIGHT / 2)
+//                    .horizontal_line_by(DEPTH_OFFSET);
+//
+//                let path = Path::new()
+//                    .set("fill", "none")
+//                    .set("stroke", theme.hierarchy_line_color.clone())
+//                    .set("stroke-width", 1)
+//                    .set("d", data);
+//                paths.push(path);
+//
+//                *leaf_counter += 1;
+//            }
+//        }
+//
+//        curr_relative_y += *leaf_counter - before;
+//    }
+//}

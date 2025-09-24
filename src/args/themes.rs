@@ -21,6 +21,8 @@ impl Themes {
                 bg_corner_rad: 0,
                 folder_bg_corner_rad: 2,
                 file_bg_corner_rad: 2,
+                hierarchy_line: HierarchyLineStyles::Default,
+                hierarchy_line_color: "hsl(0,0%,25%)".into(),
             },
             Themes::DefaultDark => Theme {
                 font: "Times New Roman".into(),
@@ -34,6 +36,8 @@ impl Themes {
                 bg_corner_rad: 0,
                 folder_bg_corner_rad: 2,
                 file_bg_corner_rad: 2,
+                hierarchy_line: HierarchyLineStyles::Default,
+                hierarchy_line_color: "hsl(0,0%,55%)".into(),
             },
         }
     }
@@ -76,4 +80,11 @@ pub struct Theme {
     pub bg_corner_rad: u32,
     pub folder_bg_corner_rad: u32,
     pub file_bg_corner_rad: u32,
+    pub hierarchy_line: HierarchyLineStyles,
+    pub hierarchy_line_color: String,
+}
+
+#[derive(Debug)]
+pub enum HierarchyLineStyles {
+    Default,
 }
