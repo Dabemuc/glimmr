@@ -10,12 +10,13 @@ use svg::node::element::{Group, Path, Rectangle, Script, Text};
 mod fonts;
 use svg::Node;
 
-const ROW_HEIGHT: u32 = 30;
+const ROW_HEIGHT: u32 = 20;
 const ROW_PADDING: u32 = 3;
 const DEPTH_OFFSET: u32 = 20;
 const TOP_PADDING: u32 = 20;
 const BG_X_PADDING: u32 = 20;
 const ITEM_BG_X_PADDING: u32 = 3;
+const ITEM_BG_Y_PADDING: u32 = 1;
 
 /// Compose the full SVG from the folder structure
 pub fn compose_svg_from_filestruct(
@@ -97,24 +98,28 @@ pub fn compose_svg_from_filestruct(
     }
 
     // Add script to get widths correct
-    let mut script = Script::new(
+    let script_content = format!(
         r#"
-        function adjustBoxes() {
-        document.querySelectorAll('g.file, g.folder').forEach(group => {
+    function adjustBoxes() {{
+        document.querySelectorAll('g.file, g.folder').forEach(group => {{
             const text = group.querySelector('text.label-text');
             const rect = group.querySelector('rect.label-bg');
-            if (text && rect) {
-            const bbox = text.getBBox();
-            const padding = 6; // adjust to match ITEM_BG_X_PADDING * 2
-            rect.setAttribute('width', bbox.width + padding);
-            }
-        });
-        }
-        adjustBoxes();
-        "#,
+            if (text && rect) {{
+                const bbox = text.getBBox();
+                const x_padding = {};
+                const y_padding = {};
+                rect.setAttribute('width', bbox.width + x_padding);
+                rect.setAttribute('height', bbox.height + y_padding);
+            }}
+        }});
+    }}
+    adjustBoxes();
+    "#,
+        ITEM_BG_X_PADDING * 2,
+        ITEM_BG_Y_PADDING * 2
     );
 
-    // force raw content, not escaped
+    let mut script = Script::new(script_content);
     script.assign("type", "application/ecmascript");
 
     doc = doc.add(script);
