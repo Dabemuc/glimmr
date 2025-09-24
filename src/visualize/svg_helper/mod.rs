@@ -6,10 +6,11 @@ use crate::visualize::svg_helper::fonts::{
 use rusttype::Font;
 use svg::Document;
 use svg::node::element::path::Data;
-use svg::node::element::{Group, Path, Rectangle, Text};
+use svg::node::element::{Group, Path, Rectangle, Script, Text};
 mod fonts;
+use svg::Node;
 
-const ROW_HEIGHT: u32 = 20;
+const ROW_HEIGHT: u32 = 30;
 const ROW_PADDING: u32 = 3;
 const DEPTH_OFFSET: u32 = 20;
 const TOP_PADDING: u32 = 20;
@@ -95,6 +96,29 @@ pub fn compose_svg_from_filestruct(
         }
     }
 
+    // Add script to get widths correct
+    let mut script = Script::new(
+        r#"
+        function adjustBoxes() {
+        document.querySelectorAll('g.file, g.folder').forEach(group => {
+            const text = group.querySelector('text.label-text');
+            const rect = group.querySelector('rect.label-bg');
+            if (text && rect) {
+            const bbox = text.getBBox();
+            const padding = 6; // adjust to match ITEM_BG_X_PADDING * 2
+            rect.setAttribute('width', bbox.width + padding);
+            }
+        });
+        }
+        adjustBoxes();
+        "#,
+    );
+
+    // force raw content, not escaped
+    script.assign("type", "application/ecmascript");
+
+    doc = doc.add(script);
+
     // Define SVG size
     let computed_width = width.unwrap_or(
         max_label_len_at_max_depth as u32 + (max_depth * DEPTH_OFFSET) + (BG_X_PADDING * 2),
@@ -107,52 +131,48 @@ pub fn compose_svg_from_filestruct(
 }
 
 /// Compose a file SVG element
-fn compose_file(name: &str, x_pos: u32, y_pos: u32, theme: &Theme, font: &Font) -> Group {
+fn compose_file(name: &str, x_pos: u32, y_pos: u32, theme: &Theme, _font: &Font) -> Group {
     let bg = Rectangle::new()
+        .set("class", "label-bg")
         .set("y", -(theme.file_font_size as i32))
-        .set("fill", theme.file_bg_color.clone())
-        .set(
-            "width",
-            measure_text_width(&name, font, theme.file_font_size as f32) * 1.1
-                + ITEM_BG_X_PADDING as f32 * 2.0,
-        )
         .set("height", ROW_HEIGHT)
         .set("rx", theme.file_bg_corner_rad)
-        .set("ry", theme.file_bg_corner_rad);
+        .set("ry", theme.file_bg_corner_rad)
+        .set("fill", theme.file_bg_color.clone());
 
     let text = Text::new(name)
+        .set("class", "label-text")
         .set("x", ITEM_BG_X_PADDING)
         .set("font-family", theme.font.clone())
         .set("font-size", theme.file_font_size)
         .set("fill", theme.file_text_color.clone());
 
     Group::new()
+        .set("class", "file")
         .set("transform", format!("translate({},{})", x_pos, y_pos))
         .add(bg)
         .add(text)
 }
 
 /// Compose a folder SVG element
-fn compose_folder(name: &str, x_pos: u32, y_pos: u32, theme: &Theme, font: &Font) -> Group {
+fn compose_folder(name: &str, x_pos: u32, y_pos: u32, theme: &Theme, _font: &Font) -> Group {
     let bg = Rectangle::new()
+        .set("class", "label-bg")
         .set("y", -(theme.folder_font_size as i32))
-        .set("fill", theme.folder_bg_color.clone())
-        .set(
-            "width",
-            measure_text_width(&name, font, theme.file_font_size as f32) * 1.1
-                + ITEM_BG_X_PADDING as f32 * 2.0,
-        )
         .set("height", ROW_HEIGHT)
         .set("rx", theme.folder_bg_corner_rad)
-        .set("ry", theme.folder_bg_corner_rad);
+        .set("ry", theme.folder_bg_corner_rad)
+        .set("fill", theme.folder_bg_color.clone());
 
     let text = Text::new(name)
+        .set("class", "label-text")
         .set("x", ITEM_BG_X_PADDING)
         .set("font-family", theme.font.clone())
         .set("font-size", theme.folder_font_size)
         .set("fill", theme.folder_text_color.clone());
 
     Group::new()
+        .set("class", "folder")
         .set("transform", format!("translate({},{})", x_pos, y_pos))
         .add(bg)
         .add(text)

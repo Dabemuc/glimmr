@@ -10,9 +10,9 @@ impl Themes {
     pub fn get_theme(&self) -> Theme {
         match self {
             Themes::Default => Theme {
-                font: "Arial".into(),
-                folder_font_size: 16,
-                file_font_size: 14,
+                font: "Avenir".into(),
+                folder_font_size: 13,
+                file_font_size: 12,
                 folder_text_color: "hsl(0,0%,10%)".into(),
                 file_text_color: "hsl(0,0%,15%)".into(),
                 folder_bg_color: "hsl(0,0%,90%)".into(),
