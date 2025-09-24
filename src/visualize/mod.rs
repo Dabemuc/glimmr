@@ -1,35 +1,34 @@
 use crate::args::filetypes::Filetype;
 use crate::args::themes::Theme;
-use crate::fs_parser::fs_structs::Folder;
+use crate::fs_parser::fs_structs::FlatFsEntry;
 use std::path::PathBuf;
 mod svg_helper;
 use log::debug;
 use svg_helper::compose_svg_from_filestruct;
 
 pub fn visualize(
-    filestructure: Folder,
+    filestructure: Vec<FlatFsEntry>,
     theme: Theme,
     filetype: Filetype,
     output_filepath: PathBuf,
-    include_root: bool,
     width: Option<u32>,
     heigth: Option<u32>,
+    bake_font: bool,
 ) {
     match filetype {
         Filetype::SVG => build_svg(
             filestructure,
             theme,
             output_filepath,
-            include_root,
             Filetype::SVG.extension(),
             width,
             heigth,
+            bake_font,
         ),
         Filetype::PNG => build_png(
             filestructure,
             theme,
             output_filepath,
-            include_root,
             Filetype::PNG.extension(),
             width,
             heigth,
@@ -38,16 +37,16 @@ pub fn visualize(
 }
 
 fn build_svg(
-    filestructure: Folder,
+    filestructure: Vec<FlatFsEntry>,
     theme: Theme,
     mut output_filepath: PathBuf,
-    include_root: bool,
     extension: &'static str,
     width: Option<u32>,
     heigth: Option<u32>,
+    bake_font: bool,
 ) {
     // Compose svg
-    let document = compose_svg_from_filestruct(filestructure, theme, include_root, width, heigth);
+    let document = compose_svg_from_filestruct(filestructure, theme, width, heigth, bake_font);
 
     // Output
     debug!("Provided output_filepath: {}", output_filepath.display());
@@ -59,10 +58,9 @@ fn build_svg(
 }
 
 fn build_png(
-    _filestructure: Folder,
+    _filestructure: Vec<FlatFsEntry>,
     _theme: Theme,
     _output_filepath: PathBuf,
-    _include_root: bool,
     _extension: &'static str,
     _width: Option<u32>,
     _heigth: Option<u32>,

@@ -1,26 +1,12 @@
 #[derive(Debug)]
-pub struct File {
-    pub name: String,
-}
-impl File {
-    pub fn new(name: String) -> Self {
-        File { name }
-    }
+pub enum FsEntryType {
+    File,
+    Folder,
 }
 
 #[derive(Debug)]
-pub struct Folder {
+pub struct FlatFsEntry {
     pub name: String,
-    pub contents: Vec<FsEntry>,
-}
-impl Folder {
-    pub fn new(name: String, contents: Vec<FsEntry>) -> Self {
-        Folder { name, contents }
-    }
-}
-
-#[derive(Debug)]
-pub enum FsEntry {
-    File(File),
-    Folder(Folder),
+    pub entry_type: FsEntryType,
+    pub depth: u32,
 }

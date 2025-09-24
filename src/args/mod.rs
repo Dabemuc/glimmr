@@ -15,19 +15,19 @@ pub struct Args {
     pub input_path: PathBuf,
 
     /// Theme to use
-    #[arg(short, long, default_value_t = Themes::Default)]
+    #[arg(short = 't', long, default_value_t = Themes::Default)]
     pub theme: Themes,
 
     /// Output filetype
-    #[arg(short, long, default_value_t = Filetype::SVG)]
+    #[arg(short = 'f', long, default_value_t = Filetype::SVG)]
     pub filetype: Filetype,
 
     /// Output filename or filepath
-    #[arg(short, long, default_value = "glimmr_out")]
+    #[arg(short = 'o', long, default_value = "glimmr_out")]
     pub output_filepath: String,
 
     /// Max recursive depth
-    #[arg(short, long, default_value_t = 3)]
+    #[arg(short = 'd', long, default_value_t = 3)]
     pub depth: u32,
 
     /// Include root folder
@@ -35,7 +35,7 @@ pub struct Args {
     pub include_root: bool,
 
     /// Dont render background color
-    #[arg(short, long)]
+    #[arg(short = 'b', long)]
     pub bg_transparent: bool,
 
     /// Absolute width of output
@@ -45,4 +45,8 @@ pub struct Args {
     /// Absolute height of output
     #[arg(short = 'H', long)]
     pub height: Option<u32>,
+
+    /// Bake font into svg
+    #[arg(short = 'F', long, default_value_t = false)]
+    pub bake_font: bool,
 }
