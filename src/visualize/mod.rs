@@ -1,10 +1,16 @@
-use crate::args::filetypes::Filetype;
-use crate::args::themes::Theme;
+use crate::args::{filetypes::Filetype, themes::Theme};
 use crate::fs_parser::fs_structs::FlatFsEntry;
 use std::path::PathBuf;
 mod svg_helper;
 use log::debug;
 use svg_helper::compose_svg_from_filestruct;
+
+use chromiumoxide::browser::{Browser, BrowserConfig};
+use chromiumoxide::cdp::browser_protocol::page::{
+    CaptureScreenshotFormat, CaptureScreenshotParams, Viewport,
+};
+use futures::StreamExt;
+use tokio::runtime::Builder;
 
 pub fn visualize(
     filestructure: Vec<FlatFsEntry>,
@@ -49,11 +55,93 @@ fn build_svg(
     svg::save(output_filepath, &document).unwrap();
 }
 
-fn build_png(
-    _filestructure: Vec<FlatFsEntry>,
-    _theme: Theme,
-    _output_filepath: PathBuf,
-    _extension: &'static str,
+pub fn build_png(
+    filestructure: Vec<FlatFsEntry>,
+    theme: Theme,
+    mut output_filepath: PathBuf,
+    extension: &'static str,
 ) {
-    panic!("PNG not yet implemented!");
+    // Compose SVG (always bake font for PNG rendering)
+    let document = compose_svg_from_filestruct(filestructure, theme, true);
+    let svg_data = document.to_string();
+
+    // Run Chromium in a Tokio runtime
+    let rt = Builder::new_current_thread().enable_all().build().unwrap();
+
+    rt.block_on(async {
+        // Launch browser
+        let (browser, mut handler) =
+            Browser::launch(BrowserConfig::builder().no_sandbox().build().unwrap())
+                .await
+                .unwrap();
+
+        // Spawn event handler
+        tokio::spawn(async move {
+            while let Some(_event) = handler.next().await {
+                // Process browser events if needed
+            }
+        });
+
+        // New blank page
+        let page = browser.new_page("about:blank").await.unwrap();
+
+        // Load SVG as content
+        page.set_content(svg_data).await.unwrap();
+
+        // Let JS run
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+
+        // Get bounding box of the SVG
+        let element = page.find_element("svg").await.unwrap();
+        let bbox_result = element
+            .call_js_fn("function() { return this.getBoundingClientRect(); }", true)
+            .await
+            .unwrap();
+
+        let mut x = 0.0;
+        let mut y = 0.0;
+        let mut width = 0.0;
+        let mut height = 0.0;
+
+        if let Some(preview) = bbox_result.result.preview {
+            for prop in preview.properties {
+                match prop.name.as_str() {
+                    "x" => x = prop.value.unwrap().parse().unwrap(),
+                    "y" => y = prop.value.unwrap().parse().unwrap(),
+                    "width" => width = prop.value.unwrap().parse().unwrap(),
+                    "height" => height = prop.value.unwrap().parse().unwrap(),
+                    _ => {},
+                }
+            }
+        }
+
+        // Screenshot with clip matching the SVG bounding box
+        // Screenshot with clip matching the SVG bounding box
+        let png_bytes = page
+            .screenshot(CaptureScreenshotParams {
+                format: Some(CaptureScreenshotFormat::Png),
+                quality: None, // Only used for JPEG
+                clip: Some(Viewport {
+                    x,
+                    y,
+                    width,
+                    height,
+                    scale: 1.0,
+                }),
+                capture_beyond_viewport: Some(true), // ensures nothing is cut off
+                from_surface: Some(true),
+                optimize_for_speed: Some(false),
+            })
+            .await
+            .unwrap();
+
+        // Fix extension if missing
+        if output_filepath.extension().is_none() {
+            output_filepath.set_extension(extension);
+        }
+
+        // Save PNG
+        std::fs::write(&output_filepath, png_bytes).unwrap();
+        debug!("Saved PNG to {}", output_filepath.display());
+    });
 }
