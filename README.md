@@ -32,7 +32,7 @@ Glimmr is a command-line tool that generates beautiful and customizable visualiz
   <tr>
     <td valign="top">
       <p>This visualization of the project's <code>src/</code> directory was generated with the following command:</p>
-      <pre><code>glimmr src -d 1 -t default_dark</code></pre>
+      <pre><code>glimmr ./src -o assets/demo.png -d 1 -t nord -f png -r</code></pre>
     </td>
     <td width="50%" align="center">
 <img src="assets/demo.png" alt="Glimmr Demo Visualization" />

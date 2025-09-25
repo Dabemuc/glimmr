@@ -98,14 +98,22 @@ pub fn build_png(
             .await
             .unwrap();
 
-        // Convert to JSON value
-        let bbox: serde_json::Value = serde_json::from_value(bbox_result.result.value.unwrap())
-            .expect("Failed to parse bounding box");
+        let mut x = 0.0;
+        let mut y = 0.0;
+        let mut width = 0.0;
+        let mut height = 0.0;
 
-        let x = bbox["x"].as_f64().unwrap();
-        let y = bbox["y"].as_f64().unwrap();
-        let width = bbox["width"].as_f64().unwrap();
-        let height = bbox["height"].as_f64().unwrap();
+        if let Some(preview) = bbox_result.result.preview {
+            for prop in preview.properties {
+                match prop.name.as_str() {
+                    "x" => x = prop.value.unwrap().parse().unwrap(),
+                    "y" => y = prop.value.unwrap().parse().unwrap(),
+                    "width" => width = prop.value.unwrap().parse().unwrap(),
+                    "height" => height = prop.value.unwrap().parse().unwrap(),
+                    _ => {},
+                }
+            }
+        }
 
         // Screenshot with clip matching the SVG bounding box
         // Screenshot with clip matching the SVG bounding box
