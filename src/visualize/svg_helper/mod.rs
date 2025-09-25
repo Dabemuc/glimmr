@@ -1,8 +1,6 @@
 use crate::args::themes::{HierarchyLineStyles, Theme};
 use crate::fs_parser::fs_structs::{FlatFsEntry, FsEntryType};
-use crate::visualize::svg_helper::fonts::{
-    build_b64_font_embed, load_font_bytes, measure_text_width,
-};
+use crate::visualize::svg_helper::fonts::{build_b64_font_embed, load_font_bytes};
 use rusttype::Font;
 use svg::Document;
 use svg::node::element::path::Data;
@@ -13,7 +11,7 @@ use svg::Node;
 const ROW_HEIGHT: u32 = 20;
 const ROW_PADDING: u32 = 3;
 const DEPTH_OFFSET: u32 = 20;
-const TOP_PADDING: u32 = 20;
+const TOP_PADDING: u32 = (ROW_HEIGHT as f32 * 1.5) as u32;
 const BG_X_PADDING: u32 = 20;
 const ITEM_BG_X_PADDING: u32 = 3;
 const ITEM_BG_Y_PADDING: u32 = 1;
@@ -22,8 +20,6 @@ const ITEM_BG_Y_PADDING: u32 = 1;
 pub fn compose_svg_from_filestruct(
     filestructure: Vec<FlatFsEntry>,
     theme: Theme,
-    width: Option<u32>,
-    heigth: Option<u32>,
     bake_font: bool,
 ) -> Document {
     let mut doc = Document::new();
@@ -72,8 +68,6 @@ pub fn compose_svg_from_filestruct(
     }
 
     // Build filestructure visualization
-    let mut max_depth = 0;
-    let mut max_label_len_at_max_depth = 0;
     for (i, entry) in filestructure.iter().enumerate() {
         // Build file/folder for this row
         let row_x = DEPTH_OFFSET * entry.depth + BG_X_PADDING;
@@ -86,18 +80,9 @@ pub fn compose_svg_from_filestruct(
                 doc = doc.add(compose_folder(&entry.name, row_x, row_y, &theme, &font))
             }
         }
-
-        // Update max vars
-        if entry.depth > max_depth {
-            max_depth = entry.depth
-        }
-        let computed_text_len = measure_text_width(&entry.name, &font, theme.file_font_size as f32);
-        if computed_text_len as i32 > max_label_len_at_max_depth {
-            max_label_len_at_max_depth = computed_text_len as i32
-        }
     }
 
-    // Add script to get widths correct
+    // Add script to get widths and heights correct
     let script_content = format!(
         r#"
     function adjustBoxes() {{
@@ -113,10 +98,30 @@ pub fn compose_svg_from_filestruct(
             }}
         }});
     }}
+
+    function adjustViewBox() {{
+        const svg = document.querySelector('svg');
+        let maxWidth = 0;
+        document.querySelectorAll('g.file, g.folder').forEach(group => {{
+            const groupBBox = group.getBBox();
+            const transform = group.transform.baseVal.consolidate().matrix;
+            const groupWidth = groupBBox.x + transform.e + groupBBox.width;
+            if (groupWidth > maxWidth) {{
+                maxWidth = groupWidth;
+            }}
+        }});
+
+        const currentViewBox = svg.getAttribute('viewBox').split(' ').map(Number);
+        const padding = {};
+        svg.setAttribute('viewBox', `0 0 ${{maxWidth + padding}} ${{currentViewBox[3]}}`);
+    }}
+
     adjustBoxes();
+    adjustViewBox();
     "#,
         ITEM_BG_X_PADDING * 2,
-        ITEM_BG_Y_PADDING * 2
+        ITEM_BG_Y_PADDING * 2,
+        BG_X_PADDING,
     );
 
     let mut script = Script::new(script_content);
@@ -124,13 +129,9 @@ pub fn compose_svg_from_filestruct(
 
     doc = doc.add(script);
 
-    // Define SVG size
-    let computed_width = width.unwrap_or(
-        max_label_len_at_max_depth as u32 + (max_depth * DEPTH_OFFSET) + (BG_X_PADDING * 2),
-    );
-    let computed_height =
-        heigth.unwrap_or(filestructure.len() as u32 * (ROW_HEIGHT + ROW_PADDING) + TOP_PADDING);
-    doc = doc.set("viewBox", (0, 0, computed_width, computed_height));
+    // Define SVG size. Width will be dynamically set by js script
+    let computed_height = filestructure.len() as u32 * (ROW_HEIGHT + ROW_PADDING) + TOP_PADDING;
+    doc = doc.set("viewBox", (0, 0, 100, computed_height));
 
     doc
 }

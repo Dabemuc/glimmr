@@ -11,8 +11,6 @@ pub fn visualize(
     theme: Theme,
     filetype: Filetype,
     output_filepath: PathBuf,
-    width: Option<u32>,
-    heigth: Option<u32>,
     bake_font: bool,
 ) {
     match filetype {
@@ -21,8 +19,6 @@ pub fn visualize(
             theme,
             output_filepath,
             Filetype::SVG.extension(),
-            width,
-            heigth,
             bake_font,
         ),
         Filetype::PNG => build_png(
@@ -30,8 +26,6 @@ pub fn visualize(
             theme,
             output_filepath,
             Filetype::PNG.extension(),
-            width,
-            heigth,
         ),
     }
 }
@@ -41,12 +35,10 @@ fn build_svg(
     theme: Theme,
     mut output_filepath: PathBuf,
     extension: &'static str,
-    width: Option<u32>,
-    heigth: Option<u32>,
     bake_font: bool,
 ) {
     // Compose svg
-    let document = compose_svg_from_filestruct(filestructure, theme, width, heigth, bake_font);
+    let document = compose_svg_from_filestruct(filestructure, theme, bake_font);
 
     // Output
     debug!("Provided output_filepath: {}", output_filepath.display());
@@ -62,8 +54,6 @@ fn build_png(
     _theme: Theme,
     _output_filepath: PathBuf,
     _extension: &'static str,
-    _width: Option<u32>,
-    _heigth: Option<u32>,
 ) {
     panic!("PNG not yet implemented!");
 }

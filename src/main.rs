@@ -26,8 +26,6 @@ fn main() {
         args.theme.get_theme(),
         args.filetype,
         PathBuf::from(args.output_filepath),
-        args.width,
-        args.height,
         args.bake_font,
     );
 }

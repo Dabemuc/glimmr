@@ -38,14 +38,6 @@ pub struct Args {
     #[arg(short = 'b', long)]
     pub bg_transparent: bool,
 
-    /// Absolute width of output
-    #[arg(short = 'W', long)]
-    pub width: Option<u32>,
-
-    /// Absolute height of output
-    #[arg(short = 'H', long)]
-    pub height: Option<u32>,
-
     /// Bake font into svg
     #[arg(short = 'F', long, default_value_t = false)]
     pub bake_font: bool,
