@@ -1,5 +1,6 @@
 <div align="center">
-  <img src="assets/logo.svg" alt="Glimmr Logo" width="330" />
+  <img src="assets/logo.svg" alt="Glimmr Logo" width="300" />
+  <h1>Glimmr</h1>
 </div>
 
 <p align="center">
