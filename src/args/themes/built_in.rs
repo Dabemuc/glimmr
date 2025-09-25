@@ -11,18 +11,18 @@ pub static THEMES: Lazy<HashMap<BuiltInThemes, Theme>> = Lazy::new(|| {
         BuiltInThemes::Default,
         Theme {
             font: "Arial".into(),
-            folder_font_size: 13,
-            file_font_size: 12,
-            folder_text_color: "hsl(0,0%,10%)".into(),
-            file_text_color: "hsl(0,0%,15%)".into(),
-            folder_bg_color: "hsl(0,0%,90%)".into(),
-            file_bg_color: "hsl(0,0%,95%)".into(),
-            bg_color: Some("hsl(0,0%,100%)".into()),
+            folder_font_size: 14,
+            file_font_size: 14,
+            folder_text_color: "#111111".into(),
+            file_text_color: "#333333".into(),
+            folder_bg_color: "#F5F5F5".into(),
+            file_bg_color: "#FAFAFA".into(),
+            bg_color: Some("#FFFFFF".into()),
             bg_corner_rad: 0,
             folder_bg_corner_rad: 2,
             file_bg_corner_rad: 2,
             hierarchy_line: HierarchyLineStyles::Default,
-            hierarchy_line_color: "hsl(0,0%,25%)".into(),
+            hierarchy_line_color: "#555555".into(),
         },
     );
 
@@ -32,16 +32,16 @@ pub static THEMES: Lazy<HashMap<BuiltInThemes, Theme>> = Lazy::new(|| {
             font: "Arial".into(),
             folder_font_size: 14,
             file_font_size: 14,
-            folder_text_color: "hsl(0,0%,90%)".into(),
-            file_text_color: "hsl(0,0%,75%)".into(),
-            folder_bg_color: "hsl(0,0%,10%)".into(),
-            file_bg_color: "hsl(0,0%,15%)".into(),
-            bg_color: Some("hsl(0,0%,5%)".into()),
+            folder_text_color: "#FFFFFF".into(),
+            file_text_color: "#CCCCCC".into(),
+            folder_bg_color: "#333333".into(),
+            file_bg_color: "#222222".into(),
+            bg_color: Some("#111111".into()),
             bg_corner_rad: 0,
             folder_bg_corner_rad: 2,
             file_bg_corner_rad: 2,
             hierarchy_line: HierarchyLineStyles::Default,
-            hierarchy_line_color: "hsl(0,0%,55%)".into(),
+            hierarchy_line_color: "#DDDDDD".into(),
         },
     );
 
@@ -142,3 +142,4 @@ pub static THEMES: Lazy<HashMap<BuiltInThemes, Theme>> = Lazy::new(|| {
 
     m
 });
+

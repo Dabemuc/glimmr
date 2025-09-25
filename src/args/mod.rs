@@ -1,5 +1,5 @@
 pub mod themes;
-use themes::{BuiltInThemes, Themes};
+use themes::Themes;
 pub mod filetypes;
 use clap::Parser;
 use filetypes::Filetype;
@@ -15,7 +15,7 @@ pub struct Args {
     pub input_path: PathBuf,
 
     /// Theme to use
-    #[arg(short = 't', long, default_value_t = Themes::BuiltIn(BuiltInThemes::Default))]
+    #[arg(short = 't', long, default_value = "default")]
     pub theme: Themes,
 
     /// Output filetype

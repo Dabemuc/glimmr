@@ -9,7 +9,7 @@ mod fonts;
 use svg::Node;
 
 const ROW_HEIGHT: u32 = 20;
-const ROW_PADDING: u32 = 3;
+const ROW_PADDING: u32 = 2;
 const DEPTH_OFFSET: u32 = 20;
 const TOP_PADDING: u32 = (ROW_HEIGHT as f32 * 1.5) as u32;
 const BG_X_PADDING: u32 = 20;
