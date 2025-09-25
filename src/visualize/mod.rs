@@ -50,10 +50,33 @@ fn build_svg(
 }
 
 fn build_png(
-    _filestructure: Vec<FlatFsEntry>,
-    _theme: Theme,
-    _output_filepath: PathBuf,
-    _extension: &'static str,
+    filestructure: Vec<FlatFsEntry>,
+    theme: Theme,
+    mut output_filepath: PathBuf,
+    extension: &'static str,
 ) {
-    panic!("PNG not yet implemented!");
+    // Compose svg, always bake font for PNG rendering
+    let document = compose_svg_from_filestruct(filestructure, theme, true);
+    let svg_data = document.to_string();
+
+    // Create a font database and load system fonts
+    let mut fontdb = usvg::fontdb::Database::new();
+    fontdb.load_system_fonts();
+
+    // Parse SVG with usvg
+    let tree = usvg::Tree::from_data(svg_data.as_bytes(), &usvg::Options::default(), &fontdb).unwrap();
+
+    // Render with resvg
+    let pixmap_size = tree.size().to_int_size();
+    let mut pixmap = resvg::tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height()).unwrap();
+    
+    resvg::render(&tree, resvg::tiny_skia::Transform::default(), &mut pixmap.as_mut());
+
+    // Save PNG
+    debug!("Provided output_filepath: {}", output_filepath.display());
+    if output_filepath.extension().is_none() {
+        output_filepath.set_extension(extension);
+        debug!("After adding extension: {}", output_filepath.display());
+    }
+    pixmap.save_png(output_filepath).unwrap();
 }

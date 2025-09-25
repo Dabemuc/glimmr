@@ -34,7 +34,7 @@ Glimmr is a command-line tool that generates beautiful and customizable visualiz
       <pre><code>glimmr src -d 1 -t default_dark</code></pre>
     </td>
     <td width="50%" align="center">
-      <img src="assets/demo.svg" alt="Glimmr Demo Visualization" width="100%" />
+<img src="assets/demo.png" alt="Glimmr Demo Visualization" />
     </td>
   </tr>
 </table>
