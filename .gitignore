@@ -1,2 +1,9 @@
-zig-out
-.zig-cache
+
+test.svg
+.DS_Store
+
+
+# Added by cargo
+
+/target
+
