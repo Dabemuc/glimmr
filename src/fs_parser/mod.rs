@@ -1,6 +1,6 @@
 pub mod fs_structs;
 use fs_structs::{FlatFsEntry, FsEntryType};
-use ignore::{overrides::OverrideBuilder, WalkBuilder};
+use ignore::{WalkBuilder, overrides::OverrideBuilder};
 use std::path::PathBuf;
 
 /// Parses the filesystem starting from `path` and returns a flat vector of `FlatFsEntry`.
