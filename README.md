@@ -19,12 +19,12 @@ Glimmr is a command-line tool that generates beautiful and customizable visualiz
 
 ## Features
 
-- **Directory Visualization**: Generate tree-like visualizations for any given directory.
-- **Custom Themes**: Customize the look and feel of the visualization with different color themes.
-- **SVG Output**: Outputs to a clean, scalable SVG file.
-- **Adjustable Depth**: Control the maximum depth of the directory traversal.
-- **Font Embedding**: Option to bake the font directly into the SVG for perfect rendering anywhere.
-- **Transparent Background**: Option to render with a transparent background for easy integration into other media.
+- **Tree-like directory visualizations**
+- **Pre-made and custom themes**
+- **Outputs to either png or svg**
+- **Many settings to archive the look you want**
+- **Flexible exclusion options** (e.g., `.gitignore` support, ignoring hidden files, custom excludes)
+- **Folder collapsing**
 
 ## Demo
 
@@ -45,10 +45,15 @@ Glimmr is a command-line tool that generates beautiful and customizable visualiz
 - **Language**: [Rust](https://www.rust-lang.org/)
 - **Argument Parsing**: [clap](https://crates.io/crates/clap)
 - **SVG Generation**: [svg](https://crates.io/crates/svg)
+- **PNG Generation**: [chromiumoxide](https://crates.io/crates/chromiumoxide) (headless browser automation)
+- **Asynchronous Runtime**: [tokio](https://crates.io/crates/tokio) & [futures](https://crates.io/crates/futures)
+- **Serialization**: [serde](https://crates.io/crates/serde) & [serde_json](https://crates.io/crates/serde_json) (for parsing custom themes)
+- **Font Handling**: [font-kit](https://crates.io/crates/font-kit) & [rusttype](https://crates.io/crates/rusttype)
+- **File Exclusion**: [ignore](https://crates.io/crates/ignore)
 
 ## Installation
 
-Ensure you have Rust and Cargo installed. You can then install `glimmr` directly from the source:
+Ensure you have Rust and Cargo installed. You can then install `glimmr` directly from source:
 
 ```sh
 # Clone the repository
@@ -58,6 +63,8 @@ cd glimmr
 # Install the binary
 cargo install --path .
 ```
+
+You may need to add cargos install directory to path.
 
 ## Usage
 
@@ -71,17 +78,22 @@ glimmr ./my-project -o my-project.svg
 
 ### Options
 
-| Flag | Long Flag           | Description                                                  | Default      |
-| :--- | :------------------ | :----------------------------------------------------------- | :----------- |
-|      | `input_path`        | Path to the directory to visualize                           | (Required)   |
-| `-t` | `--theme`           | Theme to use. Also supports json string or path to json file | `Default`    |
-| `-f` | `--filetype`        | Output filetype                                              | `SVG`        |
-| `-o` | `--output-filepath` | Output filename or filepath                                  | `glimmr_out` |
-| `-d` | `--depth`           | Max recursive depth                                          | `3`          |
-| `-r` | `--include-root`    | Include root folder in the output                            | `false`      |
-| `-b` | `--bg-transparent`  | Render with a transparent background                         | `false`      |
-| `-F` | `--bake-font`       | Bake font into the SVG file                                  | `false`      |
-| `-h` | `--help`            | Opens help menu                                              |              |
+| Flag | Long Flag            | Description                                                  | Default      |
+| :--- | :------------------- | :----------------------------------------------------------- | :----------- |
+|      | `input_path`         | Path to the directory to visualize                           | (Required)   |
+| `-t` | `--theme`            | Theme to use. Also supports json string or path to json file | `Default`    |
+| `-f` | `--filetype`         | Output filetype                                              | `SVG`        |
+| `-o` | `--output-filepath`  | Output filename or filepath                                  | `glimmr_out` |
+| `-d` | `--depth`            | Max recursive depth                                          | `3`          |
+| `-r` | `--include-root`     | Include root folder in the output                            | `false`      |
+| `-b` | `--bg-transparent`   | Render with a transparent background                         | `false`      |
+| `-F` | `--bake-font`        | Bake font into the SVG file                                  | `false`      |
+| `-e` | `--excludes`         | Files/Folders to exclude                                     |              |
+|      | `--use-gitignore`    | Use .gitignore files for exclusion                           | `false`      |
+|      | `--ignore-hidden`    | Ignore hidden files and directories                          | `false`      |
+|      | `--collapse-folders` | Collapse folder paths that only contain a single folder      | `false`      |
+| `-h` | `--help`             | Opens help menu                                              |              |
+| `-V` | `--version`          | Displays version                                             |              |
 
 ### Example with Options
 
