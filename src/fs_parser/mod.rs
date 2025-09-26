@@ -1,82 +1,90 @@
 pub mod fs_structs;
 use fs_structs::{FlatFsEntry, FsEntryType};
-use std::fs;
-use std::io;
+use ignore::{overrides::OverrideBuilder, WalkBuilder};
 use std::path::PathBuf;
 
-pub fn parse_fs_flat(path: PathBuf, max_depth: u32, include_root: bool) -> Vec<FlatFsEntry> {
+/// Parses the filesystem starting from `path` and returns a flat vector of `FlatFsEntry`.
+///
+/// This function uses the `ignore` crate to walk the directory tree, which respects
+/// `.gitignore` and other ignore files by default. It also allows for custom exclusion
+/// patterns.
+///
+/// # Arguments
+///
+/// * `path` - The starting path for the directory traversal.
+/// * `max_depth` - The maximum depth to traverse, relative to the root.
+/// * `include_root` - Whether to include the starting path itself in the output.
+/// * `excludes` - A vector of `PathBuf`s to exclude from the traversal. These are treated as glob patterns.
+pub fn parse_fs_flat(
+    path: PathBuf,
+    max_depth: u32,
+    include_root: bool,
+    excludes: Vec<PathBuf>,
+) -> Vec<FlatFsEntry> {
     let mut flat_entries = Vec::new();
 
-    if let Err(e) = crawl_dir_rec_flat(path, 0, max_depth as i32, include_root, &mut flat_entries) {
-        panic!("Error while reading filestructure: {:?}", e);
+    // Create a WalkBuilder to configure the directory traversal.
+    let mut walk_builder = WalkBuilder::new(&path);
+
+    // Create an OverrideBuilder to add custom exclusion patterns.
+    let mut override_builder = OverrideBuilder::new(&path);
+    for exclude in excludes {
+        if let Err(e) = override_builder.add(&exclude.to_string_lossy()) {
+            eprintln!("Could not add exclude pattern: {}", e);
+        }
+    }
+    if let Ok(overrides) = override_builder.build() {
+        walk_builder.overrides(overrides);
     }
 
-    flat_entries
-}
+    // Adjust the max depth for the WalkBuilder based on whether the root is included.
+    // If the root is not included, we need to go one level deeper to get the same number of levels.
+    let final_max_depth = if include_root {
+        max_depth as usize
+    } else {
+        (max_depth + 1) as usize
+    };
+    walk_builder.max_depth(Some(final_max_depth));
 
-fn crawl_dir_rec_flat(
-    path: PathBuf,
-    current_depth: u32,
-    depth_left: i32,
-    include_self: bool,
-    flat_entries: &mut Vec<FlatFsEntry>,
-) -> io::Result<()> {
-    let folder_name = path
-        .file_name()
-        .unwrap_or_else(|| path.as_os_str())
-        .to_string_lossy()
-        .into_owned();
+    // Build and iterate over the directory walker.
+    for result in walk_builder.build() {
+        match result {
+            Ok(entry) => {
+                let mut depth = entry.depth() as u32;
 
-    if include_self {
-        // Insert this folder itself
-        flat_entries.push(FlatFsEntry {
-            name: folder_name,
-            entry_type: FsEntryType::Folder,
-            depth: current_depth,
-        });
-    }
+                // If the root is not included, skip the root entry (depth 0) and decrement
+                // the depth of all other entries.
+                if !include_root {
+                    if entry.depth() == 0 {
+                        continue;
+                    }
+                    depth -= 1;
+                }
 
-    if depth_left >= 0 {
-        for entry in fs::read_dir(&path)? {
-            let entry = entry?;
-            let path_to_entry = entry.path();
+                // Skip entries that are deeper than the specified max_depth.
+                if depth > max_depth {
+                    continue;
+                }
 
-            if path_to_entry.is_dir() {
-                // If root was not included, start children at current_depth (not +1)
-                let next_depth = if include_self {
-                    current_depth + 1
+                // Determine the entry type (File or Folder).
+                let entry_type = if entry.file_type().map_or(false, |ft| ft.is_dir()) {
+                    FsEntryType::Folder
                 } else {
-                    current_depth
+                    FsEntryType::File
                 };
 
-                crawl_dir_rec_flat(
-                    path_to_entry,
-                    next_depth,
-                    depth_left - 1,
-                    true,
-                    flat_entries,
-                )?;
-            } else {
-                let file_name = path_to_entry
-                    .file_name()
-                    .unwrap_or_else(|| path_to_entry.as_os_str())
-                    .to_string_lossy()
-                    .into_owned();
+                let name = entry.file_name().to_string_lossy().into_owned();
 
-                let file_depth = if include_self {
-                    current_depth + 1
-                } else {
-                    current_depth
-                };
-
+                // Add the entry to our flat list.
                 flat_entries.push(FlatFsEntry {
-                    name: file_name,
-                    entry_type: FsEntryType::File,
-                    depth: file_depth,
+                    name,
+                    entry_type,
+                    depth,
                 });
             }
+            Err(err) => eprintln!("ERROR: {}", err),
         }
     }
 
-    Ok(())
+    flat_entries
 }

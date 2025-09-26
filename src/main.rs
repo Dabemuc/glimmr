@@ -15,9 +15,10 @@ fn main() {
     debug!("Parsed Args: {:#?}", args);
 
     let filestructure = parse_fs_flat(
-        PathBuf::from(args.input_path),
+        args.input_path,
         args.depth,
         args.include_root,
+        args.excludes,
     );
     debug!("Parsed filestructure: {:#?}", filestructure);
 

@@ -42,4 +42,8 @@ pub struct Args {
     /// Bake font into svg
     #[arg(short = 'F', long, default_value_t = false)]
     pub bake_font: bool,
+
+    /// Files/Folders to exclude
+    #[arg(short = 'e', long, num_args = 0..)]
+    pub excludes: Vec<PathBuf>,
 }
