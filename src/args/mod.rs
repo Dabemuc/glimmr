@@ -5,7 +5,8 @@ use clap::Parser;
 use filetypes::Filetype;
 use std::path::PathBuf;
 
-/// # Glimmr
+/// Glimmr
+/// -
 /// Create beautiful visualisations of filestructures, fast and easy.
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
