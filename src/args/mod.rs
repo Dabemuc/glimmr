@@ -46,4 +46,12 @@ pub struct Args {
     /// Files/Folders to exclude
     #[arg(short = 'e', long, num_args = 0..)]
     pub excludes: Vec<PathBuf>,
+
+    /// Use .gitignore files for exclusion
+    #[arg(long)]
+    pub use_gitignore: bool,
+
+    /// Ignore hidden files and directories
+    #[arg(long)]
+    pub ignore_hidden: bool,
 }

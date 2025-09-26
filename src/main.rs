@@ -19,6 +19,8 @@ fn main() {
         args.depth,
         args.include_root,
         args.excludes,
+        args.use_gitignore,
+        args.ignore_hidden,
     );
     debug!("Parsed filestructure: {:#?}", filestructure);
 

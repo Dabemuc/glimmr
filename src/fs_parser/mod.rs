@@ -5,9 +5,9 @@ use std::path::PathBuf;
 
 /// Parses the filesystem starting from `path` and returns a flat vector of `FlatFsEntry`.
 ///
-/// This function uses the `ignore` crate to walk the directory tree, which respects
-/// `.gitignore` and other ignore files by default. It also allows for custom exclusion
-/// patterns.
+/// This function uses the `ignore` crate to walk the directory tree. By default, it does
+/// not respect `.gitignore` files or hidden files (dotfiles). This can be enabled with
+/// the `use_gitignore` and `ignore_hidden` flags. It also allows for custom exclusion patterns.
 ///
 /// # Arguments
 ///
@@ -15,16 +15,26 @@ use std::path::PathBuf;
 /// * `max_depth` - The maximum depth to traverse, relative to the root.
 /// * `include_root` - Whether to include the starting path itself in the output.
 /// * `excludes` - A vector of `PathBuf`s to exclude from the traversal. These are treated as glob patterns.
+/// * `use_gitignore` - Whether to respect `.gitignore` files for exclusion.
+/// * `ignore_hidden` - Whether to ignore hidden files and directories.
 pub fn parse_fs_flat(
     path: PathBuf,
     max_depth: u32,
     include_root: bool,
     excludes: Vec<PathBuf>,
+    use_gitignore: bool,
+    ignore_hidden: bool,
 ) -> Vec<FlatFsEntry> {
     let mut flat_entries = Vec::new();
 
     // Create a WalkBuilder to configure the directory traversal.
     let mut walk_builder = WalkBuilder::new(&path);
+
+    // Configure ignore settings. By default, we don't use .gitignore or ignore hidden files.
+    if !use_gitignore {
+        walk_builder.git_ignore(false);
+    }
+    walk_builder.hidden(ignore_hidden);
 
     // Create an OverrideBuilder to add custom exclusion patterns.
     let mut override_builder = OverrideBuilder::new(&path);
