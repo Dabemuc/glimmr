@@ -7,6 +7,8 @@ use fs_parser::parse_fs_flat;
 use std::path::PathBuf;
 mod visualize;
 use visualize::visualize;
+mod transform;
+use transform::do_transforms;
 
 fn main() {
     env_logger::init();
@@ -14,7 +16,7 @@ fn main() {
     let args = Args::parse();
     debug!("Parsed Args: {:#?}", args);
 
-    let filestructure = parse_fs_flat(
+    let mut filestructure = parse_fs_flat(
         args.input_path,
         args.depth,
         args.include_root,
@@ -22,7 +24,12 @@ fn main() {
         args.use_gitignore,
         args.ignore_hidden,
     );
+
     debug!("Parsed filestructure: {:#?}", filestructure);
+
+    filestructure = do_transforms(filestructure);
+
+    debug!("Transformed filestructure: {:#?}", filestructure);
 
     visualize(
         filestructure,

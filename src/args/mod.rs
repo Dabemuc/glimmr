@@ -54,4 +54,8 @@ pub struct Args {
     /// Ignore hidden files and directories
     #[arg(long)]
     pub ignore_hidden: bool,
+
+    /// Collapse folder paths that only contain a single folder
+    #[arg(long)]
+    pub collapse_folders: bool,
 }
