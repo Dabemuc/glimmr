@@ -27,7 +27,7 @@ fn main() {
 
     debug!("Parsed filestructure: {:#?}", filestructure);
 
-    filestructure = do_transforms(filestructure);
+    filestructure = do_transforms(filestructure, args.collapse_folders);
 
     debug!("Transformed filestructure: {:#?}", filestructure);
 
