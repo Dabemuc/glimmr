@@ -30,10 +30,12 @@ pub fn parse_fs_flat(
     // Create a WalkBuilder to configure the directory traversal.
     let mut walk_builder = WalkBuilder::new(&path);
 
-    // Configure ignore settings. By default, we don't use .gitignore or ignore hidden files.
-    if !use_gitignore {
-        walk_builder.git_ignore(false);
-    }
+    // Configure ignore settings.
+    println!(
+        "Setting git_ignore to {} and hidden to {}",
+        use_gitignore, ignore_hidden
+    );
+    walk_builder.git_ignore(use_gitignore);
     walk_builder.hidden(ignore_hidden);
 
     // Create an OverrideBuilder to add custom exclusion patterns.
