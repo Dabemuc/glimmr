@@ -41,7 +41,12 @@ pub fn parse_fs_flat(
     // Create an OverrideBuilder to add custom exclusion patterns.
     let mut override_builder = OverrideBuilder::new(&path);
     for exclude in excludes {
-        if let Err(e) = override_builder.add(&exclude.to_string_lossy()) {
+        let mut pattern = exclude.to_string_lossy().into_owned();
+        if !pattern.starts_with('!') {
+            pattern = format!("!{}", pattern);
+        }
+
+        if let Err(e) = override_builder.add(&pattern) {
             eprintln!("Could not add exclude pattern: {}", e);
         }
     }
